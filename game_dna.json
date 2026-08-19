@@ -1,0 +1,166 @@
+{
+  "$schema": "/home/jonathan/dev/forgedna/cli/forgedna/schemas/game_dna.schema.json",
+  "schema_version": "1.0.0",
+
+  "meta": {
+    "title": "Oracle Playground",
+    "tagline": "Two hands, two thrusters, a hangar full of things that break.",
+    "description": "A Linux-native VR physics sandbox. You fly Oracle-style: each controller is an independent thruster. Point a hand, squeeze the trigger, go that way. Two hands together is SuperSonic-style Iron Man flight; one hand is torque and ballet. The hangar is a materials lab — ice, rubber, metal, wood, glass — plus shatterable crates and a buoyancy pool. Built so a human and an AI agent can both play and restock the room, on desktop or in a headset.",
+    "genre": ["sandbox", "simulation", "action"],
+    "art_style": "stylized",
+    "target_platforms": ["linux", "pc", "vr_pcvr", "vr_quest"],
+    "player_count": { "min": 1, "max": 1, "mode": "singleplayer" },
+    "rating": "everyone",
+    "tags": ["vr", "physics", "jolt", "openxr", "linux", "agentic", "flight"],
+    "inspiration": ["SuperSonic", "Boneworks", "Half-Life: Alyx gravity gloves", "Kerbal EVA"],
+    "author": "Jonathan Korstad + Hermes"
+  },
+
+  "mechanics": {
+    "movement": {
+      "types": ["fly", "hover", "walk"],
+      "physics_style": "custom"
+    },
+    "crafting": { "enabled": false },
+    "economy": { "enabled": false },
+    "custom_mechanics": [
+      {
+        "name": "Oracle Dual Thrusters",
+        "description": "Each hand is an independent rocket. Trigger magnitude scales thrust along that hand's forward (-Z). Both hands together translate; a single hand adds torque when apply_at_hands is on. Grip multiplies thrust (turbo) and drains booster fuel. Ported from SuperSonic handleFlightInput onto a Jolt RigidBody.",
+        "rules": [
+          "Left trigger applies force along left-hand aim",
+          "Right trigger applies force along right-hand aim",
+          "Grip multiplies thrust by turbo_multiplier (~3.8) while booster fuel remains",
+          "Booster fuel drains while turbo is held and recharges otherwise",
+          "Speed gears scale base thrust (1..max_gear)",
+          "Optional upright stabilizer applies torque toward world-up",
+          "Desktop maps Q/LMB and E/RMB to virtual hands parented to the look camera"
+        ],
+        "interactions": [
+          "Thruster forces collide the body with hangar props, ramps, and water",
+          "High linear velocity shatters destructible crates",
+          "Water buoyancy + drag fight thrusters while submerged"
+        ]
+      },
+      {
+        "name": "Material Lab",
+        "description": "Spawnable cubes with authored PhysicsMaterial profiles so friction, bounce, and density are playable, not theoretical.",
+        "rules": [
+          "ice: near-zero friction, low bounce",
+          "rubber: high friction, high bounce",
+          "metal: high density, medium friction",
+          "wood: medium density, shatterable when flagged destructible",
+          "glass: low density, high bounce, shatterable"
+        ],
+        "interactions": ["Oracle flight uses the same Jolt world as every cube"]
+      },
+      {
+        "name": "Agent View",
+        "description": "Deterministic viewport dump so a Linux agent can see what the player sees. Stand-in for Meta XR Operator.",
+        "rules": [
+          "F12 or ORACLE_AGENT_VIEW=1 writes user://agent_view.png",
+          "Capture is the active camera (desktop or XR)",
+          "Later phases may attach a VLM caption beside the PNG"
+        ],
+        "interactions": ["Hermes reads the PNG via vision_analyze or a future oracle-playground skill"]
+      }
+    ]
+  },
+
+  "world": {
+    "scale": "small",
+    "structure": "open_world",
+    "day_night_cycle": false,
+    "weather_system": ["clear"],
+    "time_of_day_effects": false,
+    "environments": [
+      {
+        "name": "Oracle Hangar",
+        "type": "industrial",
+        "visual_description": "A vast charcoal hangar with a matte concrete floor, warm sodium work lights, and a long ice lane down one wall. Opposite the ice: a rubber bounce pit, a metal scrap stack, a wood crate pyramid, and a glass sculpture. A rectangular indoor pool sits at the far end, teal and slightly choppy. Color palette: charcoal, warm amber, teal water, scuffed concrete, hazard-yellow railings.",
+        "audio_mood": "Quiet HVAC rumble, distant metal ticks, water lapping, thruster whoosh when flying.",
+        "ambiance": {
+          "lighting": "Warm key from hangar bays, cool fill from the pool caustics, soft bloom.",
+          "fog": "None. Clear indoor volume.",
+          "particles": "Dust motes in light shafts, spray when hitting the pool fast.",
+          "sky": "Not visible. Dark industrial ceiling with skylight strips."
+        }
+      }
+    ]
+  },
+
+  "entities": {
+    "player": {
+      "visual_description": "A compact flight rig: dark capsule body, two glowing thruster gauntlets. In VR the body is mostly implied; the hands are the star.",
+      "stats": ["mass", "booster_fuel", "gear"],
+      "abilities": [
+        {
+          "name": "Oracle Thrust",
+          "description": "Fire a hand as a thruster along its aim.",
+          "cooldown_seconds": 0,
+          "resource_cost": "none"
+        },
+        {
+          "name": "Turbo",
+          "description": "Grip multiplies thrust while booster fuel lasts.",
+          "cooldown_seconds": 0,
+          "resource_cost": "booster fuel"
+        }
+      ]
+    },
+    "enemies": [],
+    "items": {
+      "rarity_tiers": [
+        { "name": "Lab Prop", "color_hex": "#888888", "drop_rate_weight": 100 }
+      ],
+      "equipment_slots": [],
+      "categories": [
+        {
+          "name": "Materials",
+          "description": "Physics cubes used to feel Jolt materials.",
+          "examples": ["Ice Cube", "Rubber Cube", "Metal Cube", "Wood Crate", "Glass Cube"]
+        }
+      ]
+    }
+  },
+
+  "assets": {
+    "models_3d": [
+      {
+        "name": "hangar_prop_placeholder",
+        "description": "Procedural primitives until Trellis.2 GLBs land in assets/imported/.",
+        "tags": ["placeholder", "physics"]
+      }
+    ],
+    "textures": [],
+    "animations": [],
+    "audio": {
+      "music": [],
+      "sfx": [
+        { "name": "thruster_loop", "description": "Soft rocket wash while a trigger is held." },
+        { "name": "shatter", "description": "Wood or glass crate breaking into shards." }
+      ],
+      "ambient": [],
+      "voice": []
+    },
+    "vfx": []
+  },
+
+  "ui": {
+    "style": "minimal charcoal HUD",
+    "color_palette": {
+      "primary": "#1a1a1a",
+      "secondary": "#e8e8e8",
+      "accent": "#f5a623",
+      "background": "#111111",
+      "text": "#e8e8e8"
+    },
+    "hud_elements": [
+      { "name": "speed", "position": "bottom_left", "description": "Current m/s" },
+      { "name": "gear", "position": "bottom_left", "description": "Thrust gear 1..N" },
+      { "name": "fuel", "position": "bottom_center", "description": "Booster fuel bar" },
+      { "name": "mode", "position": "top_right", "description": "desktop, openxr, or headless" }
+    ],
+    "menus": []
+  }
+}
