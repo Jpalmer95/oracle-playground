@@ -329,9 +329,9 @@ func _yaw_axis() -> float:
 
 
 func _vertical_axis() -> float:
-	# Left stick Y = ascend (up) / descend (down). Godot +Y is "push up".
+	# Left stick Y = ascend (up) / descend (down).
 	if xr_active and _xr_left:
-		return -_xr_left.get_vector2("primary").y
+		return _xr_left.get_vector2("primary").y
 	if DisplayServer.get_name() == "headless":
 		return 0.0
 	var y := 0.0
