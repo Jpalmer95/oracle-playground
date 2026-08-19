@@ -39,5 +39,7 @@ anti_aliasing/quality/msaa_3d=2
 
 [xr]
 
-openxr/enabled=false
+openxr/enabled=true
+openxr/default_action_map="res://openxr_action_map.tres"
+openxr/startup_alert=false
 shaders/enabled=true

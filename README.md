@@ -18,8 +18,8 @@ does not run on Linux; this repo is where we grow our own see/verify loop.
 
 ```bash
 cd /home/jonathan/dev/oracle-playground
-godot --path godot                  # desktop
-./tools/play-vr.sh                  # OpenXR after Steam Link is already in the headset
+./tools/play-desktop.sh             # mouse/keyboard hangar
+./tools/play-vr.sh                  # OpenXR — Steam Link must already be in SteamVR
 ```
 
 ### Desktop
@@ -46,13 +46,13 @@ There is no Meta Link / Quest Link on Linux. Steam Link is the path.
 1. On the PC, leave Steam running (it already listens on 27036 here).
 2. Put on the Quest 3 → **Steam Link** → connect to **jonathan-office**.
 3. Wait until SteamVR standing room is up in the headset (not just the Steam 2D desktop).
-4. On the PC, from a normal terminal (not SSH-only if you can avoid it):
+4. On the PC, from a normal terminal:
 
 ```
 /home/jonathan/dev/oracle-playground/tools/play-vr.sh
 ```
 
-HUD should say `openxr`. Triggers = independent thrusters, grip = turbo.
+Terminal must print `Oracle mode: openxr` (not `desktop`). If it still says desktop, SteamVR did not hand Godot an OpenXR session.
 
 If Steam Link will not find the PC, use ALVR instead (`~/ALVR/alvr_streamer_linux/bin/alvr_dashboard` + ALVR on the Quest), then run the same `play-vr.sh`. Same OpenXR runtime.
 
@@ -61,7 +61,7 @@ Do **not** launch Godot first and then connect the headset — OpenXR is off unl
 ## Tests
 
 ```bash
-godot --headless --path godot --script res://tests/run_tests.gd
+godot --headless --path godot --xr-mode off --script res://tests/run_tests.gd
 ```
 
 ## Asset loop

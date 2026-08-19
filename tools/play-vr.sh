@@ -13,6 +13,8 @@ if [[ ! -f /usr/share/openxr/1/active_runtime.json && ! -f "$HOME/.config/openxr
   exit 1
 fi
 echo "OpenXR runtime: SteamVR (this machine)"
-echo "If the headset is dark: Quest → Steam Link → this PC, wait for SteamVR standing room, then re-run."
+echo "Headset must already be in SteamVR (Steam Link standing room), then this attaches."
 export ORACLE_XR=1
-exec "$GODOT" --path "$ROOT/godot" "$@"
+# --xr-mode on forces the OpenXR Vulkan path at engine start.
+# Runtime initialize() after a desktop boot cannot retrofit that.
+exec "$GODOT" --path "$ROOT/godot" --xr-mode on "$@"

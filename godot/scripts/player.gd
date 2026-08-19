@@ -119,24 +119,29 @@ func _ensure_rig() -> void:
 
 
 func _try_start_xr() -> void:
-	# Never talk to SteamVR from headless CI.
+	# OpenXR must be initialized by the engine at startup (Vulkan).
+	# play-vr.sh passes --xr-mode on. Headless / desktop pass --xr-mode off.
 	if DisplayServer.get_name() == "headless":
+		print("Oracle XR: skip (headless)")
 		return
-	var want_xr := OS.get_environment("ORACLE_XR") == "1"
-	for arg in OS.get_cmdline_user_args():
-		if arg == "--xr":
-			want_xr = true
 	var iface := XRServer.find_interface("OpenXR")
 	if iface == null:
+		push_warning("Oracle XR: OpenXR interface missing")
 		return
-	if iface.is_initialized():
-		_enter_xr()
-		return
-	if want_xr and iface.initialize():
-		_enter_xr()
+	print("Oracle XR: found OpenXR initialized=", iface.is_initialized())
+	if not iface.is_initialized():
+		# Runtime initialize only works if the project enabled OpenXR before boot.
+		var ok := iface.initialize()
+		print("Oracle XR: initialize()=", ok)
+		if not ok:
+			push_warning("Oracle XR: SteamVR session not attached. Start Steam Link first, then tools/play-vr.sh")
+			return
+	_enter_xr()
 
 
 func _enter_xr() -> void:
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.physics_ticks_per_second = 90
 	get_viewport().use_xr = true
 	xr_active = true
 	if _desktop_cam:
