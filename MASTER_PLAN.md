@@ -121,9 +121,9 @@ These are the real holes vs the long-term vision. Phases close them in order.
 
 ## Phase 2 — Trellis / Blender / import loop
 
-- [ ] `tools/import_trellis.py` + `assets/imported/` watch folder
-- [ ] Runtime wrapper: GLB → convex RigidBody + material override
-- [ ] One dogfood prop generated (TRELLIS.2) and sitting in the hangar
+- [x] `tools/import_trellis.py` + `assets/imported/` watch folder
+- [x] Runtime wrapper: GLB → convex RigidBody + material override
+- [x] One dogfood prop generated (TRELLIS.2) and sitting in the hangar (`hazard_crate.glb`)
 - [ ] Document: drop a GLB, or send it through Blender MCP, re-import
 
 **Success criteria**
