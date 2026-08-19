@@ -32,7 +32,7 @@ TRELLIS.2 + SkinTokens for generated meshes.
 
 ---
 
-## Current state (2026-08-18)
+## Current state (2026-08-19)
 
 Honest snapshot, this machine:
 
@@ -63,7 +63,8 @@ These are the real holes vs the long-term vision. Phases close them in order.
    graduate back into HermesForge as a `modules/xr` later.
 3. **Flight is kinematic in SuperSonic, sandbox needs physics.** Oracle
    thrusters must apply *forces* on a Jolt RigidBody (optional torque from
-   hand offsets) so crates, water, and debris interact.
+   hand offsets) so crates, water, and debris interact. *(2026-08-19: flight
+   feel corrected — XR rig decoupled from body, gravity-free, SuperSonic drag.)*
 4. **Desktop fallback is mandatory.** Headless CI and no-headset days must
    still fly (virtual hands). OpenXR is additive, not required to boot.
 5. **Asset loop is disconnected.** Trellis / SkinTokens / Blender MCP exist

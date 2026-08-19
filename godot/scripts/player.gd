@@ -5,7 +5,10 @@ class_name OraclePlayer
 
 signal mode_changed(mode: String)
 
-@export var thrust_force := 1400.0
+@export var flight_mode := true
+@export var thrust_accel := 15.0          # m/s^2 per gear point (SuperSonic baseSpeed)
+@export var throttle_scale := 2.0         # SuperSonic's x2 on thrust
+@export var velocity_damp := 2.0          # 1/s exponential drag (halo-to-hover)
 @export var turbo_multiplier := 3.8
 @export var apply_at_hands := true
 @export var stabilize_upright := true
@@ -39,8 +42,11 @@ func _ready() -> void:
 	mass = 80.0
 	continuous_cd = true
 	can_sleep = false
-	linear_damp = 0.15
-	angular_damp = 1.2
+	# SuperSonic flight is gravity-free + velocity-damped (halo-to-hover).
+	# Hangar doors stay shut when flight_mode is off (walk/fly toggle later).
+	gravity_scale = 0.0 if flight_mode else 1.0
+	linear_damp = 0.0
+	angular_damp = 0.0
 	collision_layer = 2
 	collision_mask = 5
 	_ensure_rig()
@@ -50,11 +56,15 @@ func _ready() -> void:
 
 
 func _ensure_rig() -> void:
-	_xr_origin = get_node_or_null("XROrigin3D") as XROrigin3D
+	# XR rule: XROrigin3D lives at scene root, NOT under the physics body.
+	# If parented under this RigidBody, tracked camera + hands inherit the
+	# body's tumble rotation -> nausea + "rotational force" feel. We keep the
+	# origin as a sibling and copy only the body's *position* into it each frame.
+	_xr_origin = get_parent().get_node_or_null("XROrigin3D") as XROrigin3D
 	if _xr_origin == null:
 		_xr_origin = XROrigin3D.new()
 		_xr_origin.name = "XROrigin3D"
-		add_child(_xr_origin)
+		get_parent().add_child(_xr_origin)
 		var cam := XRCamera3D.new()
 		cam.name = "XRCamera3D"
 		_xr_origin.add_child(cam)
@@ -194,11 +204,19 @@ func _physics_process(delta: float) -> void:
 	if right_amt > 0.02:
 		_fire_hand(_active_right(), right_amt * boost)
 
+	# SuperSonic drag: velocity *= (1 - 2*dt). Exponential, rate velocity_damp/s.
+	# Gives the halo-to-hover feel; without it you coast indefinitely.
+	linear_velocity *= clampf(1.0 - velocity_damp * delta, 0.0, 1.0)
+
 	if linear_velocity.length() > max_speed:
 		linear_velocity = linear_velocity.limit_length(max_speed)
 
 	if stabilize_upright:
 		_stabilize(delta)
+
+	# XR: move the tracked rig with the body, position only (never rotation).
+	if xr_active and _xr_origin:
+		_xr_origin.global_position = global_position
 
 
 func _fire_hand(hand: Node3D, amount: float) -> void:
@@ -209,8 +227,11 @@ func _fire_hand(hand: Node3D, amount: float) -> void:
 
 
 func apply_thruster(world_dir: Vector3, amount: float, at_world: Vector3 = Vector3.ZERO) -> void:
+	# SuperSonic accel = baseSpeed(15) * gear * 2.0 * boost, integrated over dt.
+	# As Jolt force: F = m * a. One hand only = torque + turn; both = go.
 	var dir := world_dir.normalized()
-	var force := dir * thrust_force * float(gear) * amount
+	var accel := thrust_accel * float(gear) * throttle_scale * amount
+	var force := dir * accel * mass
 	if apply_at_hands and at_world != Vector3.ZERO:
 		apply_force(force, at_world - global_position)
 	else:

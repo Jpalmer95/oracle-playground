@@ -10,6 +10,9 @@ func _ready() -> void:
 	_test_materials()
 	await _test_thruster_direction()
 	await _test_independent_hands()
+	_test_xr_rig_decoupled()
+	await _test_flight_is_gravity_free()
+	await _test_velocity_damping()
 	_test_shatter()
 	_test_agent_view_api()
 	if _failures == 0:
@@ -76,6 +79,52 @@ func _test_independent_hands() -> void:
 		await get_tree().physics_frame
 	_ok(player.angular_velocity.length() > 0.05 or player.linear_velocity.length() > 0.2,
 		"offset hand changes motion, w=%s v=%s" % [player.angular_velocity, player.linear_velocity])
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_xr_rig_decoupled() -> void:
+	print("[xr rig decoupled]")
+	# Regression: the tracked XROrigin3D must be a SIBLING of the physics body,
+	# never a child. A child inherits body tumble rotation -> nausea.
+	var player: OraclePlayer = _make_player(get_tree().root)
+	var origin := player.get_node_or_null("XROrigin3D") as XROrigin3D
+	_ok(origin == null, "XROrigin3D is not a child of the body")
+	var sibling := player.get_parent().get_node_or_null("XROrigin3D") as XROrigin3D
+	_ok(sibling != null, "XROrigin3D is a sibling at scene root")
+	player.queue_free()
+	await get_tree().process_frame
+
+
+func _test_flight_is_gravity_free() -> void:
+	print("[flight gravity-free]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	_ok(player.gravity_scale == 0.0, "flight_mode => gravity_scale 0 (SuperSonic hover)")
+	player.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_velocity_damping() -> void:
+	print("[velocity damping]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	player.gravity_scale = 0.0
+	player.stabilize_upright = false
+	player.gear = 1
+	# Accelerate, then stop thrusting and confirm velocity decays (halo-to-hover).
+	for i in 30:
+		player.apply_thruster(Vector3.FORWARD, 1.0)
+		await get_tree().physics_frame
+	var peak := player.linear_velocity.length()
+	for i in 30:
+		await get_tree().physics_frame
+	var after := player.linear_velocity.length()
+	_ok(after < peak * 0.5, "velocity decays after thrust ends (peak=%.2f after=%.2f)" % [peak, after])
+	player.queue_free()
 	world.queue_free()
 	await get_tree().process_frame
 
