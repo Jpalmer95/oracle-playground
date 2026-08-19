@@ -34,6 +34,8 @@ func _ready() -> void:
 	# Builder: desktop keys and XR palette both resolve through OracleBuilder.
 	OracleBuilder.set_parent(self)
 	OracleBuilder.set_glb_wrapper(imports)
+	# System hub: HUDMenu needs the player for mode/settings dispatch.
+	HUDMenu.bind_player(player)
 
 
 func _world() -> void:

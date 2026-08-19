@@ -606,12 +606,11 @@ func _handle_meta_keys(_delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_F) and _edge("f"):
 		stabilize_upright = not stabilize_upright
 		print("stabilize_upright=", stabilize_upright)
-	# Mode toggle: T (desktop) or menu/select button (XR). Flight <-> ground.
+	# Mode toggle: desktop only (T). In XR the toggle lives in the wrist hub,
+	# because OpenXR's menu_button is reserved for the SteamVR system menu and
+	# never reaches the app. (See MASTER_PLAN Phase 5.)
 	var toggle_pressed := false
-	if xr_active:
-		toggle_pressed = (_xr_left and _xr_left.is_button_pressed("menu_button")) or \
-			(_xr_right and _xr_right.is_button_pressed("menu_button"))
-	else:
+	if not xr_active:
 		toggle_pressed = Input.is_physical_key_pressed(KEY_T)
 	var edge := toggle_pressed and not _mode_edge_was
 	_mode_edge_was = toggle_pressed

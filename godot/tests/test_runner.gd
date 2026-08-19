@@ -21,6 +21,8 @@ func _ready() -> void:
 	await _test_grab_throw()
 	await _test_bow_fire()
 	_test_mode_split()
+	_test_hud_menu()
+	_test_radio()
 	_test_shatter()
 	_test_agent_view_api()
 	if _failures == 0:
@@ -327,6 +329,68 @@ func _test_mode_split() -> void:
 	player.queue_free()
 	world.queue_free()
 	await get_tree().process_frame
+
+
+func _test_hud_menu() -> void:
+	print("[hud menu]")
+	_ok(HUDMenu != null, "HUDMenu autoload present")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	HUDMenu.bind_player(player)
+
+	# Root has the four hub submenus.
+	var root_items: Array = HUDMenu.level_items()
+	_ok(root_items.size() == 4, "root hub has 4 submenus (%d)" % root_items.size())
+	var labels := []
+	for it in root_items:
+		labels.append(str(it.get("label", "")))
+	_ok(labels.has("Tools") and labels.has("Mode & Motion") and labels.has("Radio") and labels.has("Settings"),
+		"hub labels present: %s" % str(labels))
+
+	# Navigate into Tools -> first palette submenu -> its tool items.
+	HUDMenu.activate(root_items[0])
+	_ok(HUDMenu.can_go_back(), "after entering Tools, back is available")
+	var tools_items: Array = HUDMenu.level_items()
+	HUDMenu.activate(tools_items[0])   # enter first palette (Build)
+	var build_items: Array = HUDMenu.level_items()
+	_ok(build_items.size() >= 5, "Build palette has tools (%d)" % build_items.size())
+
+	# Mode toggle via dispatch.
+	HUDMenu._dispatch("toggle_mode", "")
+	_ok(player.is_ground_mode(), "toggle_mode flips to ground")
+
+	HUDMenu.go_back()
+	HUDMenu.go_back()
+	_ok(not HUDMenu.can_go_back(), "back to root, no back available")
+
+	player.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_radio() -> void:
+	print("[radio]")
+	_ok(Radio != null, "Radio autoload present")
+	Radio.no_io = true
+	Radio.set_queue([
+		{"name": "A", "url": "https://example.invalid/a.mp3"},
+		{"name": "B", "url": "https://example.invalid/b.mp3"},
+		{"name": "C", "url": "https://example.invalid/c.mp3"},
+	])
+	_ok(Radio.has_tracks(), "radio has tracks after injection")
+	Radio.index = -1
+	Radio.playing = false
+	Radio.next()
+	_ok(Radio.index == 0, "next() from empty starts at 0")
+	Radio.next()
+	Radio.next()
+	_ok(Radio.index == 2, "next() advances (idx=2)")
+	Radio.next()
+	_ok(Radio.index == 0, "next() wraps (idx=0)")
+	Radio.prev()
+	_ok(Radio.index == 2, "prev() wraps backward (idx=2)")
+	_ok(Radio.current_name() == "C", "current_name == C")
 
 
 func _test_shatter() -> void:

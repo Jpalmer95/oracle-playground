@@ -15,6 +15,8 @@ AgentView="*res://scripts/agent_view.gd"
 MaterialLab="*res://scripts/materials.gd"
 ToolRegistry="*res://scripts/tool_registry.gd"
 OracleBuilder="*res://scripts/builder.gd"
+Radio="*res://scripts/radio.gd"
+HUDMenu="*res://scripts/hud_menu.gd"
 
 [display]
 

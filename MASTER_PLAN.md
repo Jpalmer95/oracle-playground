@@ -202,7 +202,44 @@ explosive are future arrow kinds (same `arrow` tool kind + a payload param).
 
 ---
 
-## Phase 5 — Linux “Operator” v0 (see-what-I-see)
+## Phase 5 — Wrist HUD hub + radio (primary system menu/settings)
+
+**This becomes the primary system HUD.** The flat WristPalette is replaced by a
+**nested, data-driven menu** rendered on the left wrist: a root hub with
+submenus for Tools (auto-populated from `ToolRegistry` palettes → so new
+palettes/tools appear automatically), Mode & Motion (flight/ground switch +
+walk-speed/gravity/jump), Radio (play/pause/prev/next/volume), and Settings.
+Navigation: right-hand ray + trigger to select; a persistent "back" entry when
+nested. Future plugins register one submenu — no renderer changes.
+
+**Mode switch fix:** the prior XR toggle used `menu_button`, which OpenXR r
+serves for the system menu (SteamVR intercepts it — hence no in-game control).
+Moved the toggle *into* the hub, and the hub itself opens on `by_button` (B/Y),
+which is app-visible. Desktop stays on `T`.
+
+**Radio:** streams MP3 from the public `Jpalmer95/OpenMusic` GitHub repo (same
+source as SuperSonic's radio). `Radio` autoload: play/pause/next/prev/volume,
+downloads tracks with HTTPRequest and plays via AudioStreamMP3 (no import step).
+
+Menu item kinds: `submenu`, `action` (one-shot, e.g. spawn/undo), `toggle`
+(flips a setting, re-labels), `select` (cycles a list of choices — walk speed,
+gravity, volume). State changes bump a version counter the renderer watches.
+
+- [x] `HUDMenu` autoload: nested menu tree + navigation stack + dispatch
+- [x] `Radio` autoload: OpenMusic MP3 streaming player (state machine testable)
+- [x] WristPalette → nested menu renderer (grid layout, back entry, version refresh)
+- [x] Mode toggle in-hub + `by_button` open/close; gated inputs while open
+- [ ] (future) in-menu plugin registry for third-party tools
+
+**Success criteria**
+
+- Headless: `HUDMenu` builds the tree; activating a palette submenu and a toggle dispatches correctly; navigation pushes/pops.
+- Headless: `Radio` playlist state (next/prev/toggle) is correct with injected queue (no network in CI).
+- XR: B/Y opens the hub; Tools shows all palettes from tools.json; Mode switches flight↔ground.
+
+---
+
+## Phase 6 — Linux “Operator” v0 (see-what-I-see)
 
 - [ ] Periodic stereo or mono viewport capture
 - [ ] Optional VLM caption (`ORACLE_VLM=1`) written beside the PNG
@@ -215,7 +252,7 @@ explosive are future arrow kinds (same `arrow` tool kind + a payload param).
 
 ---
 
-## Phase 6 — Graduate XR into HermesForge
+## Phase 7 — Graduate XR into HermesForge
 
 - [ ] `modules/xr` recipe + AGENT.md (origin, action map, thruster pawn)
 - [ ] ForgeDNA `custom_mechanics` → Godot adapter emission

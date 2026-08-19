@@ -55,6 +55,22 @@ and an **arrow** from the weapons palette, grab the bow, and pull the trigger
 in holding-hand to draw / fire. Object mass tracks material density (metal ≫
 ice > wood > glass), so heavy objects knock light ones harder than the reverse.
 
+### Wrist HUD (primary menu hub)
+
+Press **B / Y** in the headset (or **T** to jump straight between modes on
+desktop) to open the wrist hub — the nested system menu. It has:
+
+- **Tools** — every palette from `config/tools.json` (Build / Edit / Weapons),
+  auto-populated, so new tools/palettes appear without code changes.
+- **Mode & Motion** — switch Flight ↔ Ground, plus walk-speed and gravity presets.
+- **Radio** — background music streamed from the OpenMusic repo (play/pause,
+  next, prev, volume). Same library as the SuperSonic radio.
+- **Settings** — stabilize toggle, undo, clear-all.
+
+Point the right-hand beam at a button and pull the trigger to select; the
+bottom "Back"/"Close" entry pops the menu. The menu layers on top of whatever
+mode you're in — flight and ground controls are suspended while it's open.
+
 ### XR (Quest 3 on this Linux PC)
 
 There is no Meta Link / Quest Link on Linux. Steam Link is the path.
