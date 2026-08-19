@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "palettes": {
+    "build": {
+      "name": "Build",
+      "tools": [
+        "cube_ice",
+        "cube_rubber",
+        "cube_metal",
+        "cube_wood",
+        "cube_glass",
+        "crate_wood",
+        "hazard_crate"
+      ]
+    },
+    "edit": {
+      "name": "Edit",
+      "tools": [
+        "undo",
+        "clear"
+      ]
+    }
+  },
+  "tools": {
+    "cube_ice": {
+      "name": "Ice Cube",
+      "category": "material",
+      "kind": "material_cube",
+      "params": { "material": "ice", "size": 0.55 }
+    },
+    "cube_rubber": {
+      "name": "Rubber Cube",
+      "category": "material",
+      "kind": "material_cube",
+      "params": { "material": "rubber", "size": 0.55 }
+    },
+    "cube_metal": {
+      "name": "Metal Cube",
+      "category": "material",
+      "kind": "material_cube",
+      "params": { "material": "metal", "size": 0.55 }
+    },
+    "cube_wood": {
+      "name": "Wood Cube",
+      "category": "material",
+      "kind": "material_cube",
+      "params": { "material": "wood", "size": 0.55 }
+    },
+    "cube_glass": {
+      "name": "Glass Cube",
+      "category": "material",
+      "kind": "material_cube",
+      "params": { "material": "glass", "size": 0.55 }
+    },
+    "crate_wood": {
+      "name": "Wood Crate",
+      "category": "prop",
+      "kind": "destructible",
+      "params": { "material": "wood", "size": 0.6 }
+    },
+    "hazard_crate": {
+      "name": "Hazard Crate",
+      "category": "import",
+      "kind": "glb",
+      "params": { "path": "res://assets/imported/hazard_crate.glb" }
+    },
+    "undo": {
+      "name": "Undo",
+      "category": "action",
+      "kind": "undo"
+    },
+    "clear": {
+      "name": "Clear All",
+      "category": "action",
+      "kind": "clear"
+    }
+  }
+}

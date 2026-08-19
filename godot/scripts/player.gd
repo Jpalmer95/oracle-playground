@@ -165,8 +165,23 @@ func _enter_xr() -> void:
 		_desktop_cam.current = false
 	if _body_mesh:
 		_body_mesh.visible = false
+	_setup_wrist_palette()
 	mode_changed.emit("openxr")
 	print("Oracle mode: openxr")
+
+
+func _setup_wrist_palette() -> void:
+	var existing := _xr_origin.get_node_or_null("WristPalette")
+	if existing:
+		return
+	if _xr_left == null or _xr_right == null or _xr_origin == null:
+		return
+	var palette := Node3D.new()
+	palette.name = "WristPalette"
+	palette.set_script(preload("res://scripts/wrist_palette.gd"))
+	_xr_origin.add_child(palette)
+	palette.setup(_xr_origin, _xr_left, _xr_right)
+	print("WristPalette attached (palette=%s)" % palette.palette_id)
 
 
 func _set_desktop_mode() -> void:

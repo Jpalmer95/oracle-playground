@@ -15,6 +15,8 @@ func _ready() -> void:
 	await _test_flight_is_gravity_free()
 	await _test_velocity_damping()
 	await _test_impact_wobble_settles()
+	_test_tool_registry()
+	await _test_builder_spawn_undo()
 	_test_shatter()
 	_test_agent_view_api()
 	if _failures == 0:
@@ -178,6 +180,45 @@ func _test_impact_wobble_settles() -> void:
 	_ok(settled_at >= 0 and settled_at < 45, "spin settles <~0.5s (peak=%.2f settled_frame=%d w=%s)" % [
 		peak, settled_at, player.angular_velocity])
 	player.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_tool_registry() -> void:
+	print("[tool registry]")
+	_ok(ToolRegistry.load_error() == "", "tools.json parsed cleanly")
+	_ok(ToolRegistry.has_tool("cube_ice"), "tool cube_ice present")
+	_ok(ToolRegistry.tool_kind("cube_ice") == "material_cube", "cube_ice kind")
+	_ok(ToolRegistry.tool_kind("crate_wood") == "destructible", "crate destructible kind")
+	_ok(ToolRegistry.tool_kind("hazard_crate") == "glb", "hazard_crate glb kind")
+	_ok(ToolRegistry.has_palette("build") and ToolRegistry.has_palette("edit"), "build + edit palettes exist")
+	var build_ids: Array = ToolRegistry.palette_tool_ids("build")
+	_ok(build_ids.size() >= 5, "build palette has tools (%d)" % build_ids.size())
+	_ok(ToolRegistry.palette_tool_ids("edit") == ["undo", "clear"], "edit palette = undo+clear")
+	_ok(not ToolRegistry.has_tool("nope_123"), "unknown tool rejected")
+
+
+func _test_builder_spawn_undo() -> void:
+	print("[builder spawn/undo (three-door)]")
+	var world := Node3D.new()
+	world.name = "BuildWorld"
+	get_tree().root.add_child(world)
+	OracleBuilder.set_parent(world)
+	# Headless GDScript door — the same path desktop keys + XR ray-select use.
+	var node: Node = OracleBuilder.spawn_tool("cube_ice", Vector3(0, 2, 0))
+	_ok(node is RigidBody3D, "spawn_tool returns a RigidBody3D")
+	_ok(OracleBuilder.undo_count() == 1, "undo stack depth 1")
+	var crate: Node = OracleBuilder.spawn_tool("crate_wood", Vector3(1, 2, 0))
+	_ok(crate != null and crate.is_inside_tree(), "destructible crate spawned into tree")
+	_ok(OracleBuilder.undo_count() == 2, "undo stack depth 2")
+	# Unknown tool is a safe no-op.
+	_ok(OracleBuilder.spawn_tool("bad_id", Vector3.ZERO) == null, "unknown tool no-op")
+	# Undo pops most recent (crate) and returns true.
+	_ok(OracleBuilder.undo(), "undo returns true")
+	_ok(OracleBuilder.undo_count() == 1, "undo stack depth back to 1")
+	# Clear removes the rest.
+	_ok(OracleBuilder.clear() == 1, "clear removed remaining node")
+	_ok(OracleBuilder.undo_count() == 0, "undo stack empty after clear")
 	world.queue_free()
 	await get_tree().process_frame
 

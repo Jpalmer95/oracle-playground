@@ -19,10 +19,9 @@ func load_folder() -> int:
 			if has_node(NodePath(fname.get_basename())):
 				fname = dir.get_next()
 				continue
-			var inst := _wrap_glb(path, Vector3(x, 1.2, -14))
+			var inst := wrap_glb(path, Vector3(x, 1.2, -14), self)
 			if inst:
 				inst.name = fname.get_basename()
-				add_child(inst)
 				x += 2.4
 				spawned += 1
 		fname = dir.get_next()
@@ -30,7 +29,8 @@ func load_folder() -> int:
 	return spawned
 
 
-func _wrap_glb(path: String, at: Vector3) -> RigidBody3D:
+func wrap_glb(path: String, at: Vector3, parent: Node3D) -> RigidBody3D:
+	## Public wrapper reused by OracleBuilder so the convex-wrap logic lives once.
 	if not ResourceLoader.exists(path):
 		return null
 	var packed := load(path)
@@ -63,6 +63,8 @@ func _wrap_glb(path: String, at: Vector3) -> RigidBody3D:
 		box.size = Vector3.ONE
 		col.shape = box
 	body.add_child(col)
+	if parent:
+		parent.add_child(body)
 	return body
 
 

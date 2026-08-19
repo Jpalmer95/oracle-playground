@@ -13,6 +13,8 @@ config/icon="res://icon.svg"
 
 AgentView="*res://scripts/agent_view.gd"
 MaterialLab="*res://scripts/materials.gd"
+ToolRegistry="*res://scripts/tool_registry.gd"
+OracleBuilder="*res://scripts/builder.gd"
 
 [display]
 

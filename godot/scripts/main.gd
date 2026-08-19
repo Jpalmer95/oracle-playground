@@ -31,6 +31,10 @@ func _ready() -> void:
 	add_child(imports)
 	imports.load_folder()
 
+	# Builder: desktop keys and XR palette both resolve through OracleBuilder.
+	OracleBuilder.set_parent(self)
+	OracleBuilder.set_glb_wrapper(imports)
+
 
 func _world() -> void:
 	var env := WorldEnvironment.new()
@@ -53,19 +57,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		var player := get_node_or_null("Player") as OraclePlayer
 		match event.physical_keycode:
 			KEY_1:
-				MaterialLab.spawn_cube("ice", _front_of(player), 0.55, self)
+				OracleBuilder.spawn_tool("cube_ice", _front_of(player))
 			KEY_2:
-				MaterialLab.spawn_cube("rubber", _front_of(player), 0.55, self)
+				OracleBuilder.spawn_tool("cube_rubber", _front_of(player))
 			KEY_3:
-				MaterialLab.spawn_cube("metal", _front_of(player), 0.55, self)
+				OracleBuilder.spawn_tool("cube_metal", _front_of(player))
 			KEY_4:
-				MaterialLab.spawn_cube("wood", _front_of(player), 0.55, self)
+				OracleBuilder.spawn_tool("cube_wood", _front_of(player))
 			KEY_5:
-				MaterialLab.spawn_cube("glass", _front_of(player), 0.55, self)
+				OracleBuilder.spawn_tool("cube_glass", _front_of(player))
 			KEY_6:
-				var crate: RigidBody3D = MaterialLab.spawn_cube("wood", _front_of(player), 0.6, self)
-				crate.set_script(preload("res://scripts/destructible.gd"))
-				crate.kind = "wood"
+				OracleBuilder.spawn_tool("crate_wood", _front_of(player))
+			KEY_7:
+				OracleBuilder.spawn_tool("hazard_crate", _front_of(player))
+			KEY_U:
+				OracleBuilder.undo()
+			KEY_BACKSPACE:
+				OracleBuilder.clear()
 			KEY_I:
 				var imported := get_node_or_null("Imported")
 				if imported and imported.has_method("load_folder"):

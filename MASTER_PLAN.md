@@ -136,14 +136,30 @@ These are the real holes vs the long-term vision. Phases close them in order.
 
 ## Phase 3 — In-VR builder verbs
 
-- [ ] Grab / throw (physics pickup)
-- [ ] Wrist / desktop spawn palette (materials, primitives, imported)
-- [ ] Undo stack shared with agent API (`OracleBuilder.spawn`, `.paint`, `.undo`)
-- [ ] Simple in-VR HUD (speed, gear, mode)
+**Architecture (scalability-by-data):** Tools are *declared in JSON*, not code.
+`godot/config/tools.json` lists every tool (id, name, category, `kind`, params)
+and every *palette* (a named, ordered list of tool ids for a workflow — Build,
+Lighting, Audio, etc.). `ToolRegistry` (autoload) parses it; `OracleBuilder`
+(autoload) dispatches a tool id → node via a small set of `kind` handlers.
+Adding a tool = add a JSON entry (new `kind` = add one match-branch). Humans and
+agents both edit the same JSON; no recompile, no hidden lock files.
+
+Every verb resolves through `OracleBuilder.spawn_tool(id, pos)` whether it came
+from a desktop key, an XR ray-select, or a headless GDScript call — this is the
+three-door non-negotiable.
+
+- [x] `config/tools.json` + `ToolRegistry` autoload (parse, validate, palette/tool lookup)
+- [x] `OracleBuilder` autoload: `spawn_tool` dispatch (material_cube / destructible / glb), undo stack, `undo()`, `clear()`
+- [x] Desktop keys route through `OracleBuilder` (1–5 mats, 6 crate, U undo, Backspace clear)
+- [x] `WristPalette` XR panel built *from the registry*: ray-select right-hand buttons, trigger spawns, joystick or ray navigates; undo/clear buttons
+- [ ] Grab / throw (physics pickup: grip to hold, throw on release)
+- [ ] In-headset palette editor (re-order/add/remove tools while wearing the headset, then persist to tools.json)
 
 **Success criteria**
 
-- Same spawn call works from (1) key 1–6, (2) XR button, (3) `OracleBuilder.spawn(...)` headless
+- Same `OracleBuilder.spawn_tool("cube_ice", pos)` call works from (1) key 1, (2) XR ray-select, (3) headless — verified by a unit test that spawns headlessly and asserts the node + undo.
+- `ToolRegistry` headless test passes: palette resolves ids, unknown id is rejected, malformed JSON does not crash.
+- A fresh `tools.json` edit (add a tool) shows up in the palette on next boot without code change.
 
 ---
 
