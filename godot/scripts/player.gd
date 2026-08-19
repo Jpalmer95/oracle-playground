@@ -21,6 +21,10 @@ signal mode_changed(mode: String)
 @export var max_booster_fuel := 100.0
 @export var booster_drain := 28.0
 @export var booster_recharge := 18.0
+# Ground mode (throw/grab/bow). Separate from flight — no shared inputs.
+@export var walk_speed := 3.5
+@export var jump_impulse := 5.0
+@export var reach := 0.7
 
 var gear := 2
 var booster_fuel := 100.0
@@ -31,6 +35,11 @@ var spawn_xform := Transform3D.IDENTITY
 var _gear_cooldown := 0.0
 var _left_click_was := false
 var _right_click_was := false
+var _ground_mode := false
+var _left_grabber: Grabber3D
+var _right_grabber: Grabber3D
+var _mode_edge_was := false
+var _jump_was := false
 
 var _left: Node3D
 var _right: Node3D
@@ -134,6 +143,18 @@ func _ensure_rig() -> void:
 		_body_mesh.material_override = mat
 		add_child(_body_mesh)
 
+	# Grabbers (ground mode only) — one per hand.
+	if _left_grabber == null:
+		_left_grabber = Grabber3D.new()
+		_left_grabber.name = "LeftGrabber"
+		add_child(_left_grabber)
+		_left_grabber.reach = reach
+	if _right_grabber == null:
+		_right_grabber = Grabber3D.new()
+		_right_grabber.name = "RightGrabber"
+		add_child(_right_grabber)
+		_right_grabber.reach = reach
+
 
 func _try_start_xr() -> void:
 	# OpenXR must be initialized by the engine at startup (Vulkan).
@@ -211,6 +232,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_handle_meta_keys(delta)
+	if _ground_mode:
+		_ground_physics(delta)
+	else:
+		_flight_physics(delta)
+
+
+func _flight_physics(delta: float) -> void:
 	var left_amt := left_trigger()
 	var right_amt := right_trigger()
 	var turbo := _turbo_held()
@@ -256,6 +284,163 @@ func _physics_process(delta: float) -> void:
 	# XR: move the tracked rig with the body, position only (never rotation).
 	if xr_active and _xr_origin:
 		_xr_origin.global_position = global_position
+
+
+func _ground_physics(delta: float) -> void:
+	# Ground mode owns grab/throw + bow. No thrusters, no gear, no flight drag.
+	_left_grabber.hand = _active_left()
+	_right_grabber.hand = _active_right()
+
+	# Locomotion: walk via stick, turn via stick, jump via button.
+	_move_walk(delta)
+	_turn_walk(delta)
+	_handle_jump()
+
+	# Grab/throw: grip to hold, release to throw.
+	_handle_grab(_left_grabber, _grip_left())
+	_handle_grab(_right_grabber, _grip_right())
+
+	# Bow draw + fire.
+	_handle_bow()
+
+	# A grounded body must settle; keep it upright and damp spin lightly.
+	if stabilize_upright:
+		_stabilize(delta)
+
+	if xr_active and _xr_origin:
+		_xr_origin.global_position = global_position
+
+
+func _move_walk(delta: float) -> void:
+	var stick := _move_axis()
+	if stick.length() < 0.15:
+		return
+	var yaw := 0.0
+	if xr_active and _xr_origin:
+		yaw = _xr_origin.global_transform.basis.get_euler().y
+	else:
+		yaw = look_yaw
+	var dir := Vector3(stick.x, 0.0, stick.y).rotated(Vector3.UP, -yaw)
+	# Replace horizontal velocity while preserving gravity-driven vertical.
+	linear_velocity = Vector3(dir.x * walk_speed, linear_velocity.y, dir.z * walk_speed)
+
+
+func _turn_walk(_delta: float) -> void:
+	var yaw := _yaw_axis()
+	if absf(yaw) <= 0.15:
+		return
+	# Ground turning is frame-rate independent but applied as a direct yaw.
+	var turn := -yaw * turn_rate * get_physics_process_delta_time()
+	if xr_active:
+		_xr_origin.rotate_y(turn)
+	else:
+		look_yaw += turn
+		rotation = Vector3(0, look_yaw, 0)
+
+
+func _move_axis() -> Vector2:
+	if xr_active and _xr_left:
+		return _xr_left.get_vector2("primary")
+	if DisplayServer.get_name() == "headless":
+		return Vector2.ZERO
+	var v := Vector2.ZERO
+	if Input.is_physical_key_pressed(KEY_W):
+		v.y -= 1.0
+	if Input.is_physical_key_pressed(KEY_S):
+		v.y += 1.0
+	if Input.is_physical_key_pressed(KEY_A):
+		v.x -= 1.0
+	if Input.is_physical_key_pressed(KEY_D):
+		v.x += 1.0
+	return v
+
+
+func _handle_jump() -> void:
+	var down := _jump_pressed()
+	var edge := down and not _jump_was
+	_jump_was = down
+	if edge and _is_grounded():
+		linear_velocity.y = jump_impulse
+
+
+func _jump_pressed() -> bool:
+	if xr_active:
+		return _xr_left != null and _xr_left.is_button_pressed("ax_button")
+	if DisplayServer.get_name() == "headless":
+		return false
+	return Input.is_physical_key_pressed(KEY_SPACE)
+
+
+func _is_grounded() -> bool:
+	# Ray down a short distance from the capsule bottom.
+	var from := global_position + Vector3(0, 0.1, 0)
+	var to := from + Vector3.DOWN * 0.9
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(from, to, 1)
+	q.exclude = [get_rid()]
+	return not space.intersect_ray(q).is_empty()
+
+
+func _handle_grab(grabber: Grabber3D, wanted: float) -> void:
+	if wanted > 0.6 and not grabber.has_body():
+		grabber.grab_nearest()
+	elif wanted <= 0.6 and grabber.has_body():
+		grabber.release()
+
+
+func _grip_left() -> float:
+	if xr_active and _xr_left:
+		return _xr_axis(_xr_left, "grip")
+	if DisplayServer.get_name() == "headless":
+		return 0.0
+	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
+
+
+func _grip_right() -> float:
+	if xr_active and _xr_right:
+		return _xr_axis(_xr_right, "grip")
+	if DisplayServer.get_name() == "headless":
+		return 0.0
+	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
+
+
+func _handle_bow() -> void:
+	# If a hand holds a bow, that hand's trigger pull scales draw; releasing the
+	# trigger past the halfway point (a quick pull-then-release) fires the arrow.
+	var bow := _held_bow()
+	if bow == null:
+		return
+	var draw_hand: Node3D = null
+	if _left_grabber.held == bow:
+		draw_hand = _active_left()
+	elif _right_grabber.held == bow:
+		draw_hand = _active_right()
+	if draw_hand == null:
+		return
+	var trig := _trigger_of(draw_hand)
+	bow.set_draw(trig * bow.max_draw)
+	if trig < 0.5 and _bow_was_drawn >= 0.5:
+		bow.fire()
+	_bow_was_drawn = trig
+
+
+var _bow_was_drawn := 0.0
+
+
+func _held_bow() -> BowProp:
+	if _left_grabber.held is BowProp:
+		return _left_grabber.held
+	if _right_grabber.held is BowProp:
+		return _right_grabber.held
+	return null
+
+
+func _trigger_of(hand: Node3D) -> float:
+	if hand == _xr_left:
+		return _xr_axis(_xr_left, "trigger")
+	if hand == _xr_right:
+		return _xr_axis(_xr_right, "trigger")
+	return 0.0
 
 
 func _fire_hand(hand: Node3D, amount: float) -> void:
@@ -421,6 +606,37 @@ func _handle_meta_keys(_delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_F) and _edge("f"):
 		stabilize_upright = not stabilize_upright
 		print("stabilize_upright=", stabilize_upright)
+	# Mode toggle: T (desktop) or menu/select button (XR). Flight <-> ground.
+	var toggle_pressed := false
+	if xr_active:
+		toggle_pressed = (_xr_left and _xr_left.is_button_pressed("menu_button")) or \
+			(_xr_right and _xr_right.is_button_pressed("menu_button"))
+	else:
+		toggle_pressed = Input.is_physical_key_pressed(KEY_T)
+	var edge := toggle_pressed and not _mode_edge_was
+	_mode_edge_was = toggle_pressed
+	if edge:
+		set_ground_mode(not _ground_mode)
+
+
+func set_ground_mode(on: bool) -> void:
+	if _ground_mode == on:
+		return
+	_ground_mode = on
+	gravity_scale = 1.0 if on else 0.0
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	# Release any held props when switching modes so nothing stays frozen.
+	if _left_grabber:
+		_left_grabber.release()
+	if _right_grabber:
+		_right_grabber.release()
+	mode_changed.emit("ground" if on else "flight")
+	print("Oracle mode: ground" if on else "Oracle mode: flight")
+
+
+func is_ground_mode() -> bool:
+	return _ground_mode
 
 
 var _edges: Dictionary = {}

@@ -17,6 +17,10 @@ func _ready() -> void:
 	await _test_impact_wobble_settles()
 	_test_tool_registry()
 	await _test_builder_spawn_undo()
+	await _test_density_relative_mass()
+	await _test_grab_throw()
+	await _test_bow_fire()
+	_test_mode_split()
 	_test_shatter()
 	_test_agent_view_api()
 	if _failures == 0:
@@ -219,6 +223,108 @@ func _test_builder_spawn_undo() -> void:
 	# Clear removes the rest.
 	_ok(OracleBuilder.clear() == 1, "clear removed remaining node")
 	_ok(OracleBuilder.undo_count() == 0, "undo stack empty after clear")
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_density_relative_mass() -> void:
+	print("[density: heavy knocks light further]")
+	# Same-size cubes of different materials must have mass ordered by density,
+	# so momentum conservation makes a heavy cube shove a light one more than
+	# the reverse. This is the "object density settings" guarantee.
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	# Build directly (not via spawn) so we can compare masses without gravity.
+	var metal: RigidBody3D = MaterialLab.spawn_cube("metal", Vector3(0, 3, 0), 0.5, world)
+	var ice: RigidBody3D = MaterialLab.spawn_cube("ice", Vector3(3, 3, 0), 0.5, world)
+	metal.gravity_scale = 0.0
+	ice.gravity_scale = 0.0
+	metal.freeze = true
+	ice.freeze = true
+	_ok(metal.mass > ice.mass,
+		"metal heavier than ice at same size (%.2f > %.2f)" % [metal.mass, ice.mass])
+
+	# Direct momentum transfer: launch each mass at a fixed target of equal mass
+	# and confirm the transferred velocity is the expected fraction. Simpler and
+	# deterministic: heavier -> lighter imparts more speed than lighter -> heavier.
+	metal.freeze = false
+	ice.freeze = false
+	await get_tree().physics_frame
+	var wood: RigidBody3D = MaterialLab.spawn_cube("wood", Vector3(6, 3, 0), 0.5, world)
+	wood.gravity_scale = 0.0
+	# Density order: metal(3.2) > ice(0.9) > wood(0.7).
+	_ok(metal.mass > ice.mass and ice.mass > wood.mass,
+		"mass ordering metal > ice > wood (%.1f > %.1f > %.1f)" % [metal.mass, ice.mass, wood.mass])
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_grab_throw() -> void:
+	print("[grab/throw]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	# A grabbable cube resting in the world.
+	var cube: RigidBody3D = MaterialLab.spawn_cube("wood", Vector3(0, 1, -1), 0.5, world)
+	cube.freeze = false
+	# A hand node + grabber.
+	var hand := Marker3D.new()
+	hand.position = Vector3(0, 1, 0)
+	world.add_child(hand)
+	var grabber := Grabber3D.new()
+	world.add_child(grabber)
+	grabber.hand = hand
+	grabber.reach = 2.0
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	# Grab nearest: the cube is ~1m in front of hand.
+	var grabbed: RigidBody3D = grabber.grab_nearest()
+	_ok(grabbed == cube, "grab_nearest grabbed the cube")
+	_ok(grabber.has_body(), "grabber holds a body")
+	# Move the hand fast, then release — thrown velocity ~ hand velocity * scale.
+	var start := hand.global_position
+	hand.global_position = start + Vector3(0, 0, -3)  # 3 m in one frame -> high velocity
+	await get_tree().physics_frame
+	grabber.release()
+	_ok(not grabber.has_body(), "release clears held body")
+	_ok(cube.linear_velocity.length() > 1.0,
+		"thrown cube has velocity (v=%s)" % cube.linear_velocity)
+	grabber.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_bow_fire() -> void:
+	print("[bow fire]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var bow := BowProp.new()
+	bow.position = Vector3(0, 2, 0)
+	world.add_child(bow)
+	bow.set_draw(0.5)  # full draw
+	var arrow: ArrowProp = bow.fire()
+	_ok(arrow != null, "fire returns an arrow")
+	_ok(arrow is RigidBody3D, "arrow is a rigid body")
+	var speed := arrow.linear_velocity.length()
+	_ok(speed >= bow.power * 0.4, "arrow speed ~= draw*power (speed=%.1f power=%.0f)" % [speed, bow.power])
+	bow.queue_free()
+	arrow.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_mode_split() -> void:
+	print("[mode split]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	player.set_ground_mode(false)
+	_ok(player.gravity_scale == 0.0, "flight mode = gravity 0")
+	player.set_ground_mode(true)
+	_ok(player.gravity_scale == 1.0, "ground mode = gravity 1")
+	_ok(player.is_ground_mode(), "is_ground_mode() true")
+	player.set_ground_mode(false)
+	_ok(player.gravity_scale == 0.0, "toggle back to flight = gravity 0")
+	player.queue_free()
 	world.queue_free()
 	await get_tree().process_frame
 

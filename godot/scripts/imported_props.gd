@@ -63,6 +63,7 @@ func wrap_glb(path: String, at: Vector3, parent: Node3D) -> RigidBody3D:
 		box.size = Vector3.ONE
 		col.shape = box
 	body.add_child(col)
+	body.add_to_group("grabbable")
 	if parent:
 		parent.add_child(body)
 	return body

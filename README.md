@@ -30,14 +30,30 @@ cd /home/jonathan/dev/oracle-playground
 | Q or LMB | Left thruster |
 | E or RMB | Right thruster |
 | Shift | Turbo |
+| T | Toggle flight / ground mode |
 | F | Toggle upright stabilize |
 | 1–5 | Spawn ice / rubber / metal / wood / glass cube |
 | 6 | Spawn destructible crate |
+| 7 | Spawn hazard crate (imported GLB) |
+| U / Backspace | Undo / clear spawned |
+| G | Grab / throw (ground mode) |
+| WASD | Walk (ground mode) / yaw+vertical (flight) |
 | R | Reset player pose |
 | F12 | Dump `user://agent_view.png` for agents |
 | Esc | Release / recapture mouse |
 
 Both thrusters together = SuperSonic-style go. One hand only = torque + turn.
+
+### Modes
+
+**Flight** (default) — Oracle dual-hand thrusters, SuperSonic feel. No grab/throw.
+
+**Ground** — gravity is on, you stand on the floor. Grip a controller to grab
+the nearest physics object (any spawned prop), move your hand and release to
+throw it at your hand velocity. Faster motion = faster throw. Spawn a **bow**
+and an **arrow** from the weapons palette, grab the bow, and pull the trigger
+in holding-hand to draw / fire. Object mass tracks material density (metal ≫
+ice > wood > glass), so heavy objects knock light ones harder than the reverse.
 
 ### XR (Quest 3 on this Linux PC)
 

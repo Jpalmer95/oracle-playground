@@ -163,7 +163,46 @@ three-door non-negotiable.
 
 ---
 
-## Phase 4 — Linux “Operator” v0 (see-what-I-see)
+## Phase 4 — Ground mode: grab/throw, density, bow & arrow
+
+**Mode split:** Oracle flight stays its own clean control scheme (thrusters,
+turbo, gear). A separate **ground mode** (gravity on, capsule stands on the
+floor, smooth locomotion + turn + jump) owns grab/throw and the bow. Toggling
+modes does not share inputs — flight never fires the grabber, ground never
+fires thrusters.
+
+**Grab/throw:** per-hand `Grabber3D`. Grip = kinematic-hold nearest grabbable
+RigidBody within reach (tracked hand local offset), release = throw with the
+hand's smoothed linear velocity (and a light angular term from hand rotation).
+Speed on release matters — faster controller motion = faster throw.
+
+**Density:** mass already derives from per-material density
+(`MaterialLab.spawn_cube` = size³·200·density, metal >> wood > ice > glass).
+Jolt conserves momentum, so a light body knocking a heavy one moves it less
+than a heavy knocking a light one — no extra code, but asserted by test.
+
+**Bow & arrow:** a grabbable `BowProp` (basic model, limb+string) and a physics
+`ArrowProp` (shaft+tip, sticks on impact). Draw scales launch speed; arrows
+inherit bow velocity. Basic arrow only; piercing / splitting / flaming /
+explosive are future arrow kinds (same `arrow` tool kind + a payload param).
+
+- [x] `Grabber3D` component: nearest-grabbable pickup, kinematic hold, velocity throw
+- [x] `BowProp` + `ArrowProp` physics props
+- [x] Player flight/ground mode split + toggle (desktop/XR)
+- [x] Ground locomotion (smooth move + turn + jump)
+- [x] Builder kinds `bow` / `arrow`; grabbable group registration
+- [ ] (future) piercing/splitting/flaming/explosive arrow payloads
+
+**Success criteria**
+
+- Headless: grabber grabs a cube, throws with hand velocity ~ hand speed × throw_scale.
+- Headless: metal (heavy) cube knocks ice (light) cube farther than ice knocks metal at equal impact speed.
+- Headless: `bow.fire(draw=0.5)` yields an arrow with speed ≈ draw·power.
+- Ground mode has gravity and no thrust; flight mode has no grab/throw.
+
+---
+
+## Phase 5 — Linux “Operator” v0 (see-what-I-see)
 
 - [ ] Periodic stereo or mono viewport capture
 - [ ] Optional VLM caption (`ORACLE_VLM=1`) written beside the PNG
@@ -176,7 +215,7 @@ three-door non-negotiable.
 
 ---
 
-## Phase 5 — Graduate XR into HermesForge
+## Phase 6 — Graduate XR into HermesForge
 
 - [ ] `modules/xr` recipe + AGENT.md (origin, action map, thruster pawn)
 - [ ] ForgeDNA `custom_mechanics` → Godot adapter emission

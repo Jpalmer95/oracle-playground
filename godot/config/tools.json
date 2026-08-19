@@ -19,6 +19,13 @@
         "undo",
         "clear"
       ]
+    },
+    "weapons": {
+      "name": "Weapons",
+      "tools": [
+        "bow",
+        "arrow"
+      ]
     }
   },
   "tools": {
@@ -63,6 +70,16 @@
       "category": "import",
       "kind": "glb",
       "params": { "path": "res://assets/imported/hazard_crate.glb" }
+    },
+    "bow": {
+      "name": "Bow",
+      "category": "weapon",
+      "kind": "bow"
+    },
+    "arrow": {
+      "name": "Arrow",
+      "category": "weapon",
+      "kind": "arrow"
     },
     "undo": {
       "name": "Undo",

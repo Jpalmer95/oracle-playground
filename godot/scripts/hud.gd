@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Minimal charcoal HUD: speed, gear, fuel, mode.
+## Minimal charcoal HUD: mode, speed, gear, fuel, and control hints.
 
 var _player: OraclePlayer
 var _label: Label
@@ -24,8 +24,10 @@ func _process(_delta: float) -> void:
 	if DisplayServer.get_name() == "headless":
 		mode = "headless"
 	var stab := "on" if _player.stabilize_upright else "off"
-	_label.text = "ORACLE  %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\nQ/LMB left   E/RMB right   Shift turbo\nstick=steer  stick-click=gear  A/D turn\n1-5 mats  6 crate  R reset  F stab  F12 view" % [
+	var pmode := "ground" if _player.is_ground_mode() else "flight"
+	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip=grab/throw  stick=move  A=jump  trigger(on bow)=draw/fire --\nT/select = mode   Q/E LMB/RMB thrust   Shift turbo   G grab\n1-5 mats  6 crate  7 hazard  U undo  Bksp clear  F12 view" % [
 		mode,
+		pmode,
 		_player.linear_velocity.length(),
 		_player.gear,
 		_player.booster_fuel,

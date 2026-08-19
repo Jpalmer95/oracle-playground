@@ -62,6 +62,7 @@ func spawn_cube(kind: String, at: Vector3, size: float = 0.6, parent: Node = nul
 	body.add_child(mesh)
 	body.add_child(col)
 	body.position = at
+	body.add_to_group("grabbable")
 	if parent:
 		parent.add_child(body)
 	return body
