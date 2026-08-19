@@ -14,6 +14,7 @@ func _ready() -> void:
 	_test_xr_rig_decoupled()
 	await _test_flight_is_gravity_free()
 	await _test_velocity_damping()
+	await _test_impact_wobble_settles()
 	_test_shatter()
 	_test_agent_view_api()
 	if _failures == 0:
@@ -151,6 +152,31 @@ func _test_velocity_damping() -> void:
 		await get_tree().physics_frame
 	var after := player.linear_velocity.length()
 	_ok(after < peak * 0.5, "velocity decays after thrust ends (peak=%.2f after=%.2f)" % [peak, after])
+	player.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_impact_wobble_settles() -> void:
+	print("[impact wobble settles]")
+	# Regression: after a collision imparts spin (angular_velocity), the body
+	# must re-stabilize quickly. angular_damp + the damped stabilizer must bleed
+	# a starting spin to near-zero within ~0.5s, not oscillate forever.
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	player.gravity_scale = 0.0
+	player.stabilize_upright = true
+	# Simulate a ram: shove angular velocity directly, like hitting a crate.
+	player.angular_velocity = Vector3(0.0, 2.0, -1.0)
+	var peak := player.angular_velocity.length()
+	var settled_at := -1
+	for i in 90:
+		await get_tree().physics_frame
+		if settled_at < 0 and player.angular_velocity.length() < peak * 0.15:
+			settled_at = i
+	_ok(settled_at >= 0 and settled_at < 45, "spin settles <~0.5s (peak=%.2f settled_frame=%d w=%s)" % [
+		peak, settled_at, player.angular_velocity])
 	player.queue_free()
 	world.queue_free()
 	await get_tree().process_frame

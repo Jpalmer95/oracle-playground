@@ -11,9 +11,10 @@ signal mode_changed(mode: String)
 @export var velocity_damp := 2.0          # 1/s exponential drag (halo-to-hover)
 @export var turbo_multiplier := 3.8
 @export var turn_rate := 2.0              # rad/s at full stick (SuperSonic dolly.rotation.y -= axes[2]*2*dt)
+@export var vertical_accel := 12.0         # m/s^2 at full left-stick up/down
 @export var apply_at_hands := false       # true = offset torque (independent-thruster turn); false = central force (SuperSonic-smooth)
 @export var stabilize_upright := true
-@export var stabilize_strength := 40.0
+@export var stabilize_strength := 60.0    # 1/s^2 angular spring rate (natural freq = sqrt)
 @export var look_sensitivity := 0.0025
 @export var max_speed := 80.0
 @export var max_gear := 5
@@ -50,7 +51,9 @@ func _ready() -> void:
 	# Hangar doors stay shut when flight_mode is off (walk/fly toggle later).
 	gravity_scale = 0.0 if flight_mode else 1.0
 	linear_damp = 0.0
-	angular_damp = 0.0
+	# Collision spin must decay fast (impact wobble), even with stabilizer off.
+	# Time constant ~1/angular_damp s; 5.0 => residual spin gone in ~0.2s.
+	angular_damp = 5.0
 	collision_layer = 2
 	collision_mask = 5
 	_ensure_rig()
@@ -208,17 +211,20 @@ func _physics_process(delta: float) -> void:
 	if right_amt > 0.02:
 		_fire_hand(_active_right(), right_amt * boost)
 
-	# Joystick yaw turn (SuperSonic dolly.rotation.y -= axes[2]*2*dt).
-	# Right thumbstick X steers; left thumbstick X also steers for handedness.
-	var stick := _turn_axis()
-	if absf(stick) > 0.15:
-		var turn := -stick * turn_rate * delta
+	# Joystick yaw turn + vertical (SuperSonic-style, extended).
+	# Both sticks X = yaw. Left stick Y = ascend/descend (vertical thrust).
+	var yaw := _yaw_axis()
+	if absf(yaw) > 0.15:
+		var turn := -yaw * turn_rate * delta
 		if xr_active:
-			# Rotate the tracked rig's yaw; body position follows separately.
 			_xr_origin.rotate_y(turn)
 		else:
 			look_yaw += turn
 			rotation = Vector3(0, look_yaw, 0)
+
+	var vert := _vertical_axis()
+	if absf(vert) > 0.15:
+		apply_central_force(Vector3.UP * vertical_accel * mass * vert)
 
 	_handle_gear_clicks()
 
@@ -257,9 +263,18 @@ func apply_thruster(world_dir: Vector3, amount: float, at_world: Vector3 = Vecto
 
 
 func _stabilize(_delta: float) -> void:
+	# PD controller to upright: torque = I * (-kp*angle - kd*angvel).
+	# Pure proportional (old code) is an UNDAMPED spring -> oscillates forever
+	# after a collision. The -kd*angular_velocity term is velocity feedback that
+	# bleeds oscillation off. Critical damping: kd = 2*sqrt(kp). Capsule inertia
+	# about its horizontal axis ≈ (1/12)m(3r^2 + h^2) ≈ 0.23m.
 	var up := global_transform.basis.y
-	var correction := up.cross(Vector3.UP)
-	apply_torque(correction * stabilize_strength * mass)
+	var angle := up.cross(Vector3.UP)              # axis * sin(tilt), ~0 upright
+	var inertia := mass * 0.23                        # capsule, horizontal axis
+	var kp := stabilize_strength                      # 1/s^2
+	var kd := 2.0 * sqrt(stabilize_strength)          # 1/s, critical damping
+	var torque := (-angle * kp - angular_velocity * kd) * inertia
+	apply_torque(torque)
 
 
 func left_trigger() -> float:
@@ -293,16 +308,16 @@ func _turbo_held() -> bool:
 	return Input.is_physical_key_pressed(KEY_SHIFT)
 
 
-func _turn_axis() -> float:
-	# Right thumbstick X primary. SuperSonic uses axes[2] (right stick).
+func _yaw_axis() -> float:
+	# Both sticks steer yaw. Combine with a deadzone so right- or left-handed
+	# flight works identically. SuperSonic uses axes[2] (right stick).
 	if xr_active:
 		var x := 0.0
 		if _xr_right:
-			x = _xr_right.get_vector2("primary").x
-		if absf(x) < 0.05 and _xr_left:
-			# Fall back to left stick so either hand can steer.
-			x = _xr_left.get_vector2("primary").x
-		return x
+			x += _xr_right.get_vector2("primary").x
+		if _xr_left:
+			x += _xr_left.get_vector2("primary").x
+		return clampf(x, -1.0, 1.0)
 	if DisplayServer.get_name() == "headless":
 		return 0.0
 	var x := 0.0
@@ -311,6 +326,20 @@ func _turn_axis() -> float:
 	if Input.is_physical_key_pressed(KEY_D):
 		x += 1.0
 	return x
+
+
+func _vertical_axis() -> float:
+	# Left stick Y = ascend (up) / descend (down). Godot +Y is "push up".
+	if xr_active and _xr_left:
+		return -_xr_left.get_vector2("primary").y
+	if DisplayServer.get_name() == "headless":
+		return 0.0
+	var y := 0.0
+	if Input.is_physical_key_pressed(KEY_W):
+		y += 1.0
+	if Input.is_physical_key_pressed(KEY_S):
+		y -= 1.0
+	return y
 
 
 func _handle_gear_clicks() -> void:
