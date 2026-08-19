@@ -10,6 +10,7 @@ func _ready() -> void:
 	_test_materials()
 	await _test_thruster_direction()
 	await _test_independent_hands()
+	await _test_central_force_no_torque()
 	_test_xr_rig_decoupled()
 	await _test_flight_is_gravity_free()
 	await _test_velocity_damping()
@@ -79,6 +80,32 @@ func _test_independent_hands() -> void:
 		await get_tree().physics_frame
 	_ok(player.angular_velocity.length() > 0.05 or player.linear_velocity.length() > 0.2,
 		"offset hand changes motion, w=%s v=%s" % [player.angular_velocity, player.linear_velocity])
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_central_force_no_torque() -> void:
+	print("[central force no oscillation]")
+	# Regression for the oscillation bug: with apply_at_hands=false (default),
+	# an offset hand force must NOT create angular velocity. This is the
+	# SuperSonic-smooth path; the old offset-torque path caused tumble that
+	# stabilize_upright fought -> oscillation on opposite/same-direction input.
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	var player: OraclePlayer = _make_player(world)
+	player.gravity_scale = 0.0
+	player.stabilize_upright = false
+	player.apply_at_hands = false
+	player.gear = 1
+	await get_tree().physics_frame
+	# Fire an offset force repeatedly — net result must be linear, no spin.
+	for i in 20:
+		player.apply_thruster(Vector3.FORWARD, 1.0, player.global_position + Vector3(-0.4, 0.8, 0))
+		await get_tree().physics_frame
+	_ok(player.angular_velocity.length() < 0.5,
+		"central force produces no torque, w=%s" % player.angular_velocity)
+	_ok(player.linear_velocity.length() > 1.0,
+		"central force still translates, v=%s" % player.linear_velocity)
 	world.queue_free()
 	await get_tree().process_frame
 

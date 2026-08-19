@@ -10,7 +10,8 @@ signal mode_changed(mode: String)
 @export var throttle_scale := 2.0         # SuperSonic's x2 on thrust
 @export var velocity_damp := 2.0          # 1/s exponential drag (halo-to-hover)
 @export var turbo_multiplier := 3.8
-@export var apply_at_hands := true
+@export var turn_rate := 2.0              # rad/s at full stick (SuperSonic dolly.rotation.y -= axes[2]*2*dt)
+@export var apply_at_hands := false       # true = offset torque (independent-thruster turn); false = central force (SuperSonic-smooth)
 @export var stabilize_upright := true
 @export var stabilize_strength := 40.0
 @export var look_sensitivity := 0.0025
@@ -26,6 +27,9 @@ var xr_active := false
 var look_yaw := 0.0
 var look_pitch := 0.0
 var spawn_xform := Transform3D.IDENTITY
+var _gear_cooldown := 0.0
+var _left_click_was := false
+var _right_click_was := false
 
 var _left: Node3D
 var _right: Node3D
@@ -188,7 +192,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_handle_meta_keys()
+	_handle_meta_keys(delta)
 	var left_amt := left_trigger()
 	var right_amt := right_trigger()
 	var turbo := _turbo_held()
@@ -203,6 +207,20 @@ func _physics_process(delta: float) -> void:
 		_fire_hand(_active_left(), left_amt * boost)
 	if right_amt > 0.02:
 		_fire_hand(_active_right(), right_amt * boost)
+
+	# Joystick yaw turn (SuperSonic dolly.rotation.y -= axes[2]*2*dt).
+	# Right thumbstick X steers; left thumbstick X also steers for handedness.
+	var stick := _turn_axis()
+	if absf(stick) > 0.15:
+		var turn := -stick * turn_rate * delta
+		if xr_active:
+			# Rotate the tracked rig's yaw; body position follows separately.
+			_xr_origin.rotate_y(turn)
+		else:
+			look_yaw += turn
+			rotation = Vector3(0, look_yaw, 0)
+
+	_handle_gear_clicks()
 
 	# SuperSonic drag: velocity *= (1 - 2*dt). Exponential, rate velocity_damp/s.
 	# Gives the halo-to-hover feel; without it you coast indefinitely.
@@ -275,6 +293,53 @@ func _turbo_held() -> bool:
 	return Input.is_physical_key_pressed(KEY_SHIFT)
 
 
+func _turn_axis() -> float:
+	# Right thumbstick X primary. SuperSonic uses axes[2] (right stick).
+	if xr_active:
+		var x := 0.0
+		if _xr_right:
+			x = _xr_right.get_vector2("primary").x
+		if absf(x) < 0.05 and _xr_left:
+			# Fall back to left stick so either hand can steer.
+			x = _xr_left.get_vector2("primary").x
+		return x
+	if DisplayServer.get_name() == "headless":
+		return 0.0
+	var x := 0.0
+	if Input.is_physical_key_pressed(KEY_A):
+		x -= 1.0
+	if Input.is_physical_key_pressed(KEY_D):
+		x += 1.0
+	return x
+
+
+func _handle_gear_clicks() -> void:
+	# SuperSonic: joystick click = gear shift. Left click down, right click up.
+	_gear_cooldown = maxf(0.0, _gear_cooldown - get_physics_process_delta_time())
+	if _gear_cooldown > 0.0:
+		return
+	var left_down := false
+	var right_down := false
+	if xr_active:
+		left_down = _xr_left and _xr_left.is_button_pressed("primary_click")
+		right_down = _xr_right and _xr_right.is_button_pressed("primary_click")
+	else:
+		left_down = Input.is_physical_key_pressed(KEY_BRACKETLEFT)
+		right_down = Input.is_physical_key_pressed(KEY_BRACKETRIGHT)
+	var left_edge := left_down and not _left_click_was
+	var right_edge := right_down and not _right_click_was
+	_left_click_was = left_down
+	_right_click_was = right_down
+	if left_edge:
+		gear = maxi(1, gear - 1)
+		_gear_cooldown = 0.25
+		print("gear=", gear)
+	if right_edge:
+		gear = mini(max_gear, gear + 1)
+		_gear_cooldown = 0.25
+		print("gear=", gear)
+
+
 func _xr_axis(ctrl: XRController3D, action: String) -> float:
 	if ctrl == null:
 		return 0.0
@@ -304,7 +369,7 @@ func reset_pose() -> void:
 	look_pitch = 0.0
 
 
-func _handle_meta_keys() -> void:
+func _handle_meta_keys(_delta: float) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	if Input.is_physical_key_pressed(KEY_R):
@@ -312,10 +377,6 @@ func _handle_meta_keys() -> void:
 	if Input.is_physical_key_pressed(KEY_F) and _edge("f"):
 		stabilize_upright = not stabilize_upright
 		print("stabilize_upright=", stabilize_upright)
-	if Input.is_physical_key_pressed(KEY_BRACKETLEFT) and _edge("gdown"):
-		gear = maxi(1, gear - 1)
-	if Input.is_physical_key_pressed(KEY_BRACKETRIGHT) and _edge("gup"):
-		gear = mini(max_gear, gear + 1)
 
 
 var _edges: Dictionary = {}

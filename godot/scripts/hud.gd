@@ -24,7 +24,7 @@ func _process(_delta: float) -> void:
 	if DisplayServer.get_name() == "headless":
 		mode = "headless"
 	var stab := "on" if _player.stabilize_upright else "off"
-	_label.text = "ORACLE  %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\nQ/LMB left   E/RMB right   Shift turbo\n1-5 mats  6 crate  R reset  F stab  F12 view" % [
+	_label.text = "ORACLE  %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\nQ/LMB left   E/RMB right   Shift turbo\nstick=steer  stick-click=gear  A/D turn\n1-5 mats  6 crate  R reset  F stab  F12 view" % [
 		mode,
 		_player.linear_velocity.length(),
 		_player.gear,
