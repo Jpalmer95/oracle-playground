@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "palettes": {
     "build": {
       "name": "Build",
@@ -11,6 +11,28 @@
         "cube_glass",
         "crate_wood",
         "hazard_crate"
+      ]
+    },
+    "simready": {
+      "name": "SimReady Central",
+      "tools": [
+        "sr_hammer",
+        "sr_screwdriver",
+        "sr_mug",
+        "sr_bowl",
+        "sr_scissors",
+        "sr_seesaw",
+        "sr_spiral_chute"
+      ]
+    },
+    "rube_goldberg": {
+      "name": "Rube Goldberg CAD",
+      "tools": [
+        "brep_marble_steel",
+        "brep_chute_straight",
+        "brep_curved_pipe",
+        "brep_balance_rod",
+        "brep_domino"
       ]
     },
     "edit": {
@@ -70,6 +92,78 @@
       "category": "import",
       "kind": "glb",
       "params": { "path": "res://assets/imported/hazard_crate.glb" }
+    },
+    "sr_hammer": {
+      "name": "SimReady Claw Hammer",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "hammer" }
+    },
+    "sr_screwdriver": {
+      "name": "SimReady Screwdriver",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "screwdriver" }
+    },
+    "sr_mug": {
+      "name": "SimReady Ceramic Mug",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "mug" }
+    },
+    "sr_bowl": {
+      "name": "SimReady Concave Bowl",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "bowl" }
+    },
+    "sr_scissors": {
+      "name": "SimReady Hinged Scissors",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "scissors" }
+    },
+    "sr_seesaw": {
+      "name": "SimReady Swing & Seesaw",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "playground_swing_seesaw" }
+    },
+    "sr_spiral_chute": {
+      "name": "SimReady Spiral Chute",
+      "category": "simready",
+      "kind": "simready",
+      "params": { "slug": "spiral_parcel_chute" }
+    },
+    "brep_marble_steel": {
+      "name": "B-Rep Steel Marble",
+      "category": "rube_goldberg",
+      "kind": "brep",
+      "params": { "slug": "brep_marble_steel" }
+    },
+    "brep_chute_straight": {
+      "name": "B-Rep U-Channel Chute",
+      "category": "rube_goldberg",
+      "kind": "brep",
+      "params": { "slug": "brep_chute_straight" }
+    },
+    "brep_curved_pipe": {
+      "name": "B-Rep Swept Elbow Pipe",
+      "category": "rube_goldberg",
+      "kind": "brep",
+      "params": { "slug": "brep_curved_pipe" }
+    },
+    "brep_balance_rod": {
+      "name": "B-Rep Weighted Balance Staff",
+      "category": "rube_goldberg",
+      "kind": "brep",
+      "params": { "slug": "brep_balance_rod" }
+    },
+    "brep_domino": {
+      "name": "B-Rep Domino Tile",
+      "category": "rube_goldberg",
+      "kind": "brep",
+      "params": { "slug": "brep_domino" }
     },
     "bow": {
       "name": "Bow",

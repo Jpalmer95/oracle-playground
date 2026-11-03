@@ -25,7 +25,7 @@ func _process(_delta: float) -> void:
 		mode = "headless"
 	var stab := "on" if _player.stabilize_upright else "off"
 	var pmode := "ground" if _player.is_ground_mode() else "flight"
-	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip=grab/throw  stick=move  A=jump  trigger(on bow)=draw/fire --\nT/select = mode   Q/E LMB/RMB thrust   Shift turbo   G grab\n1-5 mats  6 crate  7 hazard  U undo  Bksp clear  F12 view" % [
+	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip(G)=power-grab  pinch(B)=balance-grab  stick=move  A=jump --\nT/B-Y = mode/hub   Q/E LMB/RMB thrust   Shift turbo\n1-5 mats  6 crate  7 hazard  8 hammer  9 bowl  0 marble  - chute  = staff  U undo  Bksp clear" % [
 		mode,
 		pmode,
 		_player.linear_velocity.length(),

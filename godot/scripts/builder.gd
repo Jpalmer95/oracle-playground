@@ -40,6 +40,8 @@ func spawn_tool(id: String, at: Vector3) -> Node:
 			node = _spawn_destructible(params.get("material", "wood"), at, params.get("size", 0.6))
 		"glb":
 			node = _spawn_glb(params.get("path", ""), at)
+		"simready", "brep":
+			node = _spawn_simready(params.get("slug", ""), at)
 		"bow":
 			node = _spawn_bow(at)
 		"arrow":
@@ -96,6 +98,13 @@ func _spawn_glb(path: String, at: Vector3) -> Node:
 	body.add_child(packed.instantiate())
 	_target_parent().add_child(body)
 	return body
+
+
+func _spawn_simready(slug: String, at: Vector3) -> Node:
+	if slug == "" or not SimReadyLoader.has_asset(slug):
+		push_warning("OracleBuilder: SimReady/B-Rep asset not found: '%s'" % slug)
+		return null
+	return SimReadyLoader.spawn_asset(slug, at, _target_parent())
 
 
 func _spawn_bow(at: Vector3) -> RigidBody3D:

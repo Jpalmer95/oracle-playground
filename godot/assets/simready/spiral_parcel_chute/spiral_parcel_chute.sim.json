@@ -1,0 +1,1191 @@
+{
+  "schema_version": "simready.oracle.v1",
+  "slug": "spiral_parcel_chute",
+  "package_id": "simready.hf.ForgeCAD.simready-assets.spiral_parcel_chute.2026.10.17_00",
+  "asset_name": "spiral_parcel_chute",
+  "category": "logistics",
+  "qcode": "Q1093445",
+  "license": "CC-BY-4.0",
+  "author": "ForgeCAD",
+  "asset_extents": [
+    2.264,
+    2.422629,
+    2.697
+  ],
+  "mass": 95.054128,
+  "rigid_body_count": 4,
+  "glb_file": "spiral_parcel_chute.glb",
+  "rigid_bodies": [
+    {
+      "name": "ReceivingBin",
+      "usd_path": "/Model/Geometry/ReceivingBin",
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "mass": 31.643749,
+      "center_of_mass": [
+        0.6,
+        0.206836,
+        -1.3
+      ],
+      "inertia": [
+        6.668035,
+        7.701052,
+        3.164255
+      ],
+      "physics_material": {
+        "name": "hdpe_receiver",
+        "label": "HDPE receiver",
+        "static_friction": 0.35,
+        "dynamic_friction": 0.3,
+        "restitution": 0.0,
+        "density": 950.0
+      },
+      "colliders": [
+        {
+          "name": "bin_000",
+          "type": "box",
+          "size": [
+            0.65,
+            0.012,
+            1.2
+          ],
+          "position": [
+            0.6,
+            0.006,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_001",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            0.281,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_002",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            0.919,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_003",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            0.6,
+            0.22625,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_004",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            0.6,
+            0.51875,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_005",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            0.4135,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_006",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            0.7865,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_007",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            0.6,
+            0.22625,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_008",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            0.6,
+            0.51875,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_009",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            0.4135,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_010",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            0.7865,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_011",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            0.2715,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_012",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            0.9285,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_013",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            0.6,
+            0.541,
+            -0.6965
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_014",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            0.6,
+            0.541,
+            -1.9035
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        }
+      ],
+      "grasp_lines": [
+        {
+          "name": "grasp_identifier_01",
+          "a": [
+            0.6,
+            0.47,
+            -0.75
+          ],
+          "b": [
+            0.6,
+            0.47,
+            -0.65
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SortBinB",
+      "usd_path": "/Model/Geometry/SortBinB",
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "mass": 31.643749,
+      "center_of_mass": [
+        -0.2,
+        0.206836,
+        -1.3
+      ],
+      "inertia": [
+        6.668035,
+        7.701052,
+        3.164255
+      ],
+      "physics_material": {
+        "name": "hdpe_receiver",
+        "label": "HDPE receiver",
+        "static_friction": 0.35,
+        "dynamic_friction": 0.3,
+        "restitution": 0.0,
+        "density": 950.0
+      },
+      "colliders": [
+        {
+          "name": "bin_000",
+          "type": "box",
+          "size": [
+            0.65,
+            0.012,
+            1.2
+          ],
+          "position": [
+            -0.2,
+            0.006,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_001",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            -0.519,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_002",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            0.119,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_003",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            -0.2,
+            0.22625,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_004",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            -0.2,
+            0.51875,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_005",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.3865,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_006",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.0135,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_007",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            -0.2,
+            0.22625,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_008",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            -0.2,
+            0.51875,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_009",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.3865,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_010",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.0135,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_011",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            -0.5285,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_012",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            0.1285,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_013",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            -0.2,
+            0.541,
+            -0.6965
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_014",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            -0.2,
+            0.541,
+            -1.9035
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        }
+      ],
+      "grasp_lines": [
+        {
+          "name": "grasp_identifier_01",
+          "a": [
+            -0.2,
+            0.47,
+            -0.75
+          ],
+          "b": [
+            -0.2,
+            0.47,
+            -0.65
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SortBinC",
+      "usd_path": "/Model/Geometry/SortBinC",
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "mass": 31.643749,
+      "center_of_mass": [
+        -1.0,
+        0.206836,
+        -1.3
+      ],
+      "inertia": [
+        6.668035,
+        7.701052,
+        3.164255
+      ],
+      "physics_material": {
+        "name": "hdpe_receiver",
+        "label": "HDPE receiver",
+        "static_friction": 0.35,
+        "dynamic_friction": 0.3,
+        "restitution": 0.0,
+        "density": 950.0
+      },
+      "colliders": [
+        {
+          "name": "bin_000",
+          "type": "box",
+          "size": [
+            0.65,
+            0.012,
+            1.2
+          ],
+          "position": [
+            -1.0,
+            0.006,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_001",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            -1.319,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_002",
+          "type": "box",
+          "size": [
+            0.012,
+            0.55,
+            1.2
+          ],
+          "position": [
+            -0.681,
+            0.275,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_003",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            -1.0,
+            0.22625,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_004",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            -1.0,
+            0.51875,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_005",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -1.1865,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_006",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.8135,
+            0.47,
+            -0.706
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_007",
+          "type": "box",
+          "size": [
+            0.626,
+            0.4525,
+            0.012
+          ],
+          "position": [
+            -1.0,
+            0.22625,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_008",
+          "type": "box",
+          "size": [
+            0.626,
+            0.0625,
+            0.012
+          ],
+          "position": [
+            -1.0,
+            0.51875,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_009",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -1.1865,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_010",
+          "type": "box",
+          "size": [
+            0.253,
+            0.035,
+            0.012
+          ],
+          "position": [
+            -0.8135,
+            0.47,
+            -1.894
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_011",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            -1.3285,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_012",
+          "type": "box",
+          "size": [
+            0.007,
+            0.018,
+            1.214
+          ],
+          "position": [
+            -0.6715,
+            0.541,
+            -1.3
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_013",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            -1.0,
+            0.541,
+            -0.6965
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        },
+        {
+          "name": "bin_014",
+          "type": "box",
+          "size": [
+            0.65,
+            0.018,
+            0.007
+          ],
+          "position": [
+            -1.0,
+            0.541,
+            -1.9035
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "material": "hdpe_receiver"
+        }
+      ],
+      "grasp_lines": [
+        {
+          "name": "grasp_identifier_01",
+          "a": [
+            -1.0,
+            0.47,
+            -0.75
+          ],
+          "b": [
+            -1.0,
+            0.47,
+            -0.65
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Parcel",
+      "usd_path": "/Model/Geometry/Parcel",
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "mass": 0.12288,
+      "center_of_mass": [
+        0.6,
+        2.186579,
+        0.31056
+      ],
+      "inertia": [
+        0.000131,
+        0.000102,
+        0.000102
+      ],
+      "physics_material": {
+        "name": "rigid_parcel_dry_contact",
+        "label": "Rigid parcel dry contact",
+        "static_friction": 0.14,
+        "dynamic_friction": 0.14,
+        "restitution": 0.0,
+        "density": 320.0
+      },
+      "colliders": [
+        {
+          "name": "carton",
+          "type": "box",
+          "size": [
+            0.08,
+            0.06,
+            0.08
+          ],
+          "position": [
+            0.6,
+            2.186579,
+            0.31056
+          ],
+          "rotation": [
+            -0.159365,
+            0.0,
+            -0.0,
+            0.98722
+          ],
+          "material": "rigid_parcel_dry_contact"
+        }
+      ],
+      "grasp_lines": [
+        {
+          "name": "grasp_identifier_01",
+          "a": [
+            0.6,
+            2.186579,
+            0.31056
+          ],
+          "b": [
+            0.6,
+            2.243532,
+            0.291681
+          ]
+        }
+      ]
+    }
+  ],
+  "joints": []
+}

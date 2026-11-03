@@ -239,6 +239,31 @@ gravity, volume). State changes bump a version counter the renderer watches.
 
 ---
 
+## Phase A — Generalized Physics Hands, CoM Balancing & Two-Handed Grasping
+
+- [x] Replace kinematic `freeze = true` in `Grabber3D` (`godot/scripts/grabber.gd`) with a contact-anchored 6-DOF PD force/torque drive in Jolt so held objects remain dynamic `RigidBody3D`s.
+- [x] Center-of-Mass (`center_of_mass`) leverage + grip-pressure rotational stiffness (`grip_pressure` $\in [0, 1]$): holding a long rod or hammer at its CoM balances horizontally even with a loose pinch (`B` / light grip `0.22`), while holding away from CoM produces gravitational lever torque `(anchor - CoM) x F` that tips the heavy end down.
+- [x] Two-handed simultaneous grabbing on the same `RigidBody3D` (doubles lifting force cap and creates a natural two-anchor lever arm).
+- [x] SimReady `GSP.001` `grasp_lines` snapping + surface friction slip (`ice` < `rubber`) + procedural 5-finger curl rig.
+
+---
+
+## Phase B — NVIDIA SimReady Central OpenUSD Ingestion Pipeline
+
+- [x] `tools/simready_ingest.py` searches `NVIDIA-Omniverse/simready-central` and compiles OpenUSD packages into `godot/assets/simready/<slug>/<slug>.glb` + `<slug>.sim.json` via Blender 5.0's `pxr` (`Usd`, `UsdGeom`, `UsdPhysics`, `UsdShade`).
+- [x] `SimReadyLoader` (`godot/scripts/simready_loader.gd`) autoload spawns single-body and multi-body articulated SimReady assets with exact `mass`, `center_of_mass`, `inertia`, `PhysicsMaterial`, analytic primitives (`Sphere`/`Capsule`/`Cylinder`/`Box`), compound `ConvexPolygonShape3D` concave hulls (`bowl`, `mug`), and `HingeJoint3D`/`SliderJoint3D` articulations (`playground_swing_seesaw`, `scissors`).
+- [x] Ingested 7 real SimReady Central packages (`hammer`, `screwdriver`, `mug`, `bowl`, `scissors`, `playground_swing_seesaw`, `spiral_parcel_chute`) and registered the `SimReady Central` palette in `config/tools.json`.
+
+---
+
+## Phase C — Parametric B-Rep Rube Goldberg Kit (`aether-forge` `usd-brep` Bridge)
+
+- [x] `tools/brep_rube_goldberg.py` uses `/home/jonathan/dev/aether-forge/.venv` (`usd-brep`) to construct exact CAD Rube Goldberg solids (`brep_marble_steel`, `brep_chute_straight`, `brep_curved_pipe`, `brep_balance_rod`, `brep_domino`), tessellate them, and export `.sim.json` + `.brep.usd`.
+- [x] Registered the `Rube Goldberg CAD` palette in `config/tools.json`, desktop hotkeys (`8` hammer, `9` bowl, `0` marble, `-` chute, `=` balance staff), and built the live SimReady + Rube Goldberg test bench in `arena.gd`.
+- [x] Headless verification in `test_runner.gd`: CoM balance vs off-center tipping, 2-hand 38 kg lift, SimReady `Q25294` + `GSP.001` grasp snap, 62-hull concave bowl, hinged `SeesawBeam` articulation, and steel marble rolling down the B-Rep U-channel chute to knock over a domino.
+
+---
+
 ## Phase 6 — Linux “Operator” v0 (see-what-I-see)
 
 - [ ] Periodic stereo or mono viewport capture

@@ -17,6 +17,7 @@ func build() -> void:
 	_material_stacks()
 	_crate_pyramid()
 	_pool(Vector3(0, 0.0, 22), 8.0)
+	_simready_rube_bench()
 
 
 func _static_box(p_name: String, at: Vector3, size: Vector3, color: Color, kind: String = "") -> StaticBody3D:
@@ -133,3 +134,34 @@ func _pool(at: Vector3, radius: float) -> void:
 	# a few floaters
 	for i in 4:
 		MaterialLab.spawn_cube("wood", at + Vector3(-2 + i * 1.2, 1.2, 0), 0.45, self)
+
+
+func _simready_rube_bench() -> void:
+	# Workbench pedestal for SimReady hand-manipulation + balance props
+	_static_box("SimReadyBench", Vector3(-6.0, 0.45, 3.5), Vector3(3.6, 0.9, 1.2), Color(0.25, 0.27, 0.30))
+	var props := [
+		["hammer", Vector3(-7.2, 1.05, 3.5)],
+		["screwdriver", Vector3(-6.6, 1.05, 3.5)],
+		["mug", Vector3(-6.0, 1.05, 3.5)],
+		["bowl", Vector3(-5.4, 1.05, 3.5)],
+		["scissors", Vector3(-4.8, 1.05, 3.5)],
+		["brep_balance_rod", Vector3(-6.0, 1.15, 3.1)],
+	]
+	for entry in props:
+		var slug: String = entry[0]
+		var pos: Vector3 = entry[1]
+		if SimReadyLoader.has_asset(slug):
+			SimReadyLoader.spawn_asset(slug, pos, self)
+
+	# Rube Goldberg starter station: inclined B-Rep U-channel chute -> domino chain -> SimReady bowl catcher
+	if SimReadyLoader.has_asset("brep_chute_straight"):
+		var chute := SimReadyLoader.spawn_asset("brep_chute_straight", Vector3(-2.0, 1.35, 3.5), self)
+		if chute is RigidBody3D:
+			chute.freeze = true
+			chute.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
+			chute.rotation_degrees = Vector3(0, 0, -16)
+	for i in 5:
+		if SimReadyLoader.has_asset("brep_domino"):
+			SimReadyLoader.spawn_asset("brep_domino", Vector3(-0.9 + float(i) * 0.11, 0.12, 3.5), self)
+	if SimReadyLoader.has_asset("playground_swing_seesaw"):
+		SimReadyLoader.spawn_asset("playground_swing_seesaw", Vector3(14.0, 0.0, -14.0), self)

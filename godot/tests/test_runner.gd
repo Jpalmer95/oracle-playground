@@ -25,6 +25,9 @@ func _ready() -> void:
 	_test_radio()
 	_test_shatter()
 	_test_agent_view_api()
+	await _test_phase_a_physics_balance_and_two_hands()
+	await _test_phase_b_simready_catalog_and_articulations()
+	await _test_phase_c_brep_rube_goldberg_chain()
 	if _failures == 0:
 		print("Oracle tests: PASS")
 		get_tree().quit(0)
@@ -421,3 +424,208 @@ func _make_player(parent: Node) -> OraclePlayer:
 	p.position = Vector3(0, 4, 0)
 	parent.add_child(p)
 	return p
+
+
+func _test_phase_a_physics_balance_and_two_hands() -> void:
+	print("[Phase A: generalized physics hands, CoM balance, two-hand lift, slip]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+
+	# 1. Midpoint / Center-of-Mass balancing vs off-center tipping on weighted rod
+	var rod_end: RigidBody3D = SimReadyLoader.spawn_asset("brep_balance_rod", Vector3(0, 4, 0), world) as RigidBody3D
+	var rod_com: RigidBody3D = SimReadyLoader.spawn_asset("brep_balance_rod", Vector3(0, 8, 4), world) as RigidBody3D
+	_ok(rod_end != null and rod_com != null, "spawned two brep_balance_rod instances")
+	_ok(absf(rod_com.center_of_mass.x - 0.38) < 0.02,
+		"weighted balance rod has shifted CoM (+0.38m, got %.3f)" % rod_com.center_of_mass.x)
+
+	var hand_end := Marker3D.new()
+	var hand_com := Marker3D.new()
+	# Place hand_end at the far unweighted end (-0.65m local X, 1.03m away from CoM)
+	hand_end.position = rod_end.to_global(Vector3(-0.65, 0, 0))
+	# Place hand_com right at the true Center of Mass (+0.38m local X)
+	hand_com.position = rod_com.to_global(rod_com.center_of_mass)
+	world.add_child(hand_end)
+	world.add_child(hand_com)
+
+	var grab_end := Grabber3D.new()
+	var grab_com := Grabber3D.new()
+	world.add_child(grab_end)
+	world.add_child(grab_com)
+	grab_end.hand = hand_end
+	grab_com.hand = hand_com
+
+	# Both use the exact same light pinch/balance grip (grip_pressure = 0.22)
+	grab_end.grab_at(rod_end, hand_end.global_position, 0.22)
+	grab_com.grab_at(rod_com, hand_com.global_position, 0.22)
+	_ok(not rod_end.freeze and not rod_com.freeze, "held rods stay dynamic (never frozen)")
+
+	for i in 24:
+		await get_tree().physics_frame
+
+	var tilt_end := absf(rod_end.global_transform.basis.x.y)
+	var tilt_com := absf(rod_com.global_transform.basis.x.y)
+	_ok(tilt_end > 0.18 and tilt_com < 0.04,
+		"off-CoM hold tips under gravity while CoM hold balances level (tilt_end=%.3f tilt_com=%.4f)" % [tilt_end, tilt_com])
+	grab_end.release()
+	grab_com.release()
+
+	# 2. Two-handed heavy lift vs single-handed lift on a 38 kg block
+	var heavy_one: RigidBody3D = MaterialLab.spawn_cube("metal", Vector3(-4, 2, 0), 0.5, world)
+	var heavy_two: RigidBody3D = MaterialLab.spawn_cube("metal", Vector3(4, 2, 0), 0.5, world)
+	heavy_one.mass = 38.0
+	heavy_two.mass = 38.0
+
+	var h1 := Marker3D.new()
+	h1.position = Vector3(-4, 2.8, 0)
+	world.add_child(h1)
+	var g1 := Grabber3D.new()
+	world.add_child(g1)
+	g1.hand = h1
+	g1.grab_at(heavy_one, heavy_one.global_position, 1.0)
+
+	var h2_l := Marker3D.new()
+	var h2_r := Marker3D.new()
+	h2_l.position = Vector3(3.8, 2.8, 0)
+	h2_r.position = Vector3(4.2, 2.8, 0)
+	world.add_child(h2_l)
+	world.add_child(h2_r)
+	var g2_l := Grabber3D.new()
+	var g2_r := Grabber3D.new()
+	world.add_child(g2_l)
+	world.add_child(g2_r)
+	g2_l.hand = h2_l
+	g2_r.hand = h2_r
+	g2_l.grab_at(heavy_two, heavy_two.global_position + Vector3(-0.2, 0, 0), 1.0)
+	g2_r.grab_at(heavy_two, heavy_two.global_position + Vector3(0.2, 0, 0), 1.0)
+	_ok(g2_l.held == heavy_two and g2_r.held == heavy_two, "two hands hold the same RigidBody3D simultaneously")
+
+	for i in 22:
+		await get_tree().physics_frame
+
+	_ok(heavy_two.global_position.y > heavy_one.global_position.y + 0.15,
+		"two hands lift 38kg block higher than one hand (y2=%.2f > y1=%.2f)" % [
+			heavy_two.global_position.y, heavy_one.global_position.y])
+
+	# 3. Surface friction slip factor: ice < rubber
+	var ice_c: RigidBody3D = MaterialLab.spawn_cube("ice", Vector3(0, 12, 0), 0.3, world)
+	var rub_c: RigidBody3D = MaterialLab.spawn_cube("rubber", Vector3(2, 12, 0), 0.3, world)
+	_ok(g1.get_effective_grip_factor(ice_c) < g1.get_effective_grip_factor(rub_c),
+		"ice has lower grip slip factor than rubber (%.2f < %.2f)" % [
+			g1.get_effective_grip_factor(ice_c), g1.get_effective_grip_factor(rub_c)])
+
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_phase_b_simready_catalog_and_articulations() -> void:
+	print("[Phase B: SimReady Central USD assets, grasp lines, concave bowls, articulations]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+	OracleBuilder.set_parent(world)
+
+	# 1. Verify SimReady catalog tools registered in ToolRegistry
+	_ok(ToolRegistry.has_palette("simready"), "simready palette in ToolRegistry")
+	for slug in ["hammer", "screwdriver", "mug", "bowl", "scissors", "playground_swing_seesaw", "spiral_parcel_chute"]:
+		_ok(SimReadyLoader.has_asset(slug), "SimReady asset '%s' compiled & available" % slug)
+
+	# 2. Spawn SimReady hammer via OracleBuilder and verify metadata + GSP.001 grasp line snap
+	var hammer := OracleBuilder.spawn_tool("sr_hammer", Vector3(0, 2, 0)) as RigidBody3D
+	_ok(hammer != null, "OracleBuilder spawned sr_hammer")
+	_ok(str(hammer.get_meta("simready_qcode", "")) == "Q25294", "hammer preserves Wikidata Q-Code Q25294")
+	_ok(absf(hammer.mass - 0.6401) < 0.02, "hammer preserves USD mass (~0.64kg, got %.3f)" % hammer.mass)
+	_ok(hammer.center_of_mass.length() > 0.08, "hammer preserves off-center CoM (%s)" % hammer.center_of_mass)
+
+	var h_marker := Marker3D.new()
+	h_marker.position = hammer.to_global(Vector3(0.0, 0.01, -0.06))
+	world.add_child(h_marker)
+	var h_grab := Grabber3D.new()
+	world.add_child(h_grab)
+	h_grab.hand = h_marker
+	h_grab.grab_nearest(0.8)
+	_ok(h_grab.snapped_grasp_line() != "",
+		"Grabber3D snapped onto SimReady GSP.001 grasp line (%s)" % h_grab.snapped_grasp_line())
+	h_grab.release()
+
+	# 3. Verify SimReady bowl is genuinely concave (compound ConvexPolygonShape3D hulls)
+	var bowl := SimReadyLoader.spawn_asset("bowl", Vector3(4, 1.0, 0), world) as RigidBody3D
+	bowl.freeze = true
+	bowl.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
+	var hull_count := 0
+	for c in bowl.get_children():
+		if c is CollisionShape3D and c.shape is ConvexPolygonShape3D:
+			hull_count += 1
+	_ok(hull_count >= 8, "SimReady bowl uses %d compound convex hulls for concave interior" % hull_count)
+
+	# 4. Verify multi-body articulated SimReady asset (`playground_swing_seesaw`)
+	var playset := SimReadyLoader.spawn_asset("playground_swing_seesaw", Vector3(12, 0, 0), world)
+	_ok(playset != null, "spawned playground_swing_seesaw assembly")
+	var seesaw_beam := playset.get_node_or_null("SeesawBeam") as RigidBody3D
+	var seesaw_joint := playset.get_node_or_null("Joint_Seesaw") as HingeJoint3D
+	_ok(seesaw_beam != null and seesaw_joint != null, "SeesawBeam RigidBody3D + Joint_Seesaw HingeJoint3D present")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	# Apply downward force at one end of the seesaw beam (+1.1m X) -> beam tilts!
+	for i in 18:
+		seesaw_beam.apply_force(Vector3(0, -450, 0), Vector3(1.1, 0, 0))
+		await get_tree().physics_frame
+	_ok(seesaw_beam.angular_velocity.length() > 0.05 or absf(seesaw_beam.rotation.z) > 0.02,
+		"SeesawBeam articulates around HingeJoint3D under load (rot=%s w=%s)" % [
+			seesaw_beam.rotation, seesaw_beam.angular_velocity])
+
+	OracleBuilder.clear()
+	world.queue_free()
+	await get_tree().process_frame
+
+
+func _test_phase_c_brep_rube_goldberg_chain() -> void:
+	print("[Phase C: Aether-Forge usd-brep Rube Goldberg chute -> marble -> domino chain]")
+	var world := Node3D.new()
+	get_tree().root.add_child(world)
+
+	# Floor to support domino
+	var floor_body := StaticBody3D.new()
+	var floor_col := CollisionShape3D.new()
+	var floor_box := BoxShape3D.new()
+	floor_box.size = Vector3(12, 0.2, 12)
+	floor_col.shape = floor_box
+	floor_body.position = Vector3(0, -0.1, 0)
+	floor_body.add_child(floor_col)
+	world.add_child(floor_body)
+
+	# 1. Inclined B-Rep U-channel chute sloping down toward +X
+	var chute := SimReadyLoader.spawn_asset("brep_chute_straight", Vector3(-0.75, 0.36, 0), world) as RigidBody3D
+	_ok(chute != null, "spawned brep_chute_straight")
+	chute.freeze = true
+	chute.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
+	chute.rotation_degrees = Vector3(0, 0, -20)
+
+	# 2. Upright B-Rep domino standing just past the chute exit
+	var domino := SimReadyLoader.spawn_asset("brep_domino", Vector3(0.10, 0.09, 0), world) as RigidBody3D
+	_ok(domino != null, "spawned brep_domino")
+
+	# 3. Analytic B-Rep steel marble dropped into the top of the U-channel chute
+	var marble := SimReadyLoader.spawn_asset("brep_marble_steel", Vector3(-1.20, 0.62, 0), world) as RigidBody3D
+	_ok(marble != null, "spawned brep_marble_steel")
+	var has_analytic_sphere := false
+	for c in marble.get_children():
+		if c is CollisionShape3D and c.shape is SphereShape3D:
+			has_analytic_sphere = true
+	_ok(has_analytic_sphere, "brep_marble_steel uses analytic SphereShape3D for smooth rolling")
+
+	var peak_marble_speed := 0.0
+	var peak_marble_spin := 0.0
+	for i in 65:
+		await get_tree().physics_frame
+		peak_marble_speed = maxf(peak_marble_speed, marble.linear_velocity.length())
+		peak_marble_spin = maxf(peak_marble_spin, marble.angular_velocity.length())
+
+	_ok(peak_marble_speed > 0.8 and peak_marble_spin > 2.0,
+		"steel marble rolled down B-Rep chute (peak_v=%.2f m/s, peak_w=%.2f rad/s)" % [
+			peak_marble_speed, peak_marble_spin])
+	var domino_tilt := domino.global_transform.basis.y.angle_to(Vector3.UP)
+	_ok(domino_tilt > 0.25 or domino.linear_velocity.length() > 0.1,
+		"rolling marble knocked over the domino (tilt=%.2f rad, v=%s)" % [
+			domino_tilt, domino.linear_velocity])
+
+	world.queue_free()
+	await get_tree().process_frame

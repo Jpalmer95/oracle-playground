@@ -17,6 +17,7 @@ ToolRegistry="*res://scripts/tool_registry.gd"
 OracleBuilder="*res://scripts/builder.gd"
 Radio="*res://scripts/radio.gd"
 HUDMenu="*res://scripts/hud_menu.gd"
+SimReadyLoader="*res://scripts/simready_loader.gd"
 
 [display]
 

@@ -382,9 +382,11 @@ func _is_grounded() -> bool:
 
 
 func _handle_grab(grabber: Grabber3D, wanted: float) -> void:
-	if wanted > 0.6 and not grabber.has_body():
-		grabber.grab_nearest()
-	elif wanted <= 0.6 and grabber.has_body():
+	if wanted > 0.2 and not grabber.has_body():
+		grabber.grab_nearest(wanted)
+	elif wanted > 0.2 and grabber.has_body():
+		grabber.grip_pressure = wanted
+	elif wanted <= 0.2 and grabber.has_body():
 		grabber.release()
 
 
@@ -393,6 +395,8 @@ func _grip_left() -> float:
 		return _xr_axis(_xr_left, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
+	if Input.is_physical_key_pressed(KEY_B):
+		return 0.25
 	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
 
 
@@ -401,6 +405,8 @@ func _grip_right() -> float:
 		return _xr_axis(_xr_right, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
+	if Input.is_physical_key_pressed(KEY_B):
+		return 0.25
 	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
 
 

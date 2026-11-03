@@ -72,6 +72,16 @@ func _unhandled_input(event: InputEvent) -> void:
 				OracleBuilder.spawn_tool("crate_wood", _front_of(player))
 			KEY_7:
 				OracleBuilder.spawn_tool("hazard_crate", _front_of(player))
+			KEY_8:
+				OracleBuilder.spawn_tool("sr_hammer", _front_of(player))
+			KEY_9:
+				OracleBuilder.spawn_tool("sr_bowl", _front_of(player))
+			KEY_0:
+				OracleBuilder.spawn_tool("brep_marble_steel", _front_of(player))
+			KEY_MINUS:
+				OracleBuilder.spawn_tool("brep_chute_straight", _front_of(player))
+			KEY_EQUAL:
+				OracleBuilder.spawn_tool("brep_balance_rod", _front_of(player))
 			KEY_U:
 				OracleBuilder.undo()
 			KEY_BACKSPACE:

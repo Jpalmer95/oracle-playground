@@ -1,0 +1,225 @@
+{
+  "schema_version": "simready.oracle.v1",
+  "slug": "brep_domino",
+  "package_id": "aetherforge.brep.brep_domino.v1",
+  "asset_name": "brep_domino",
+  "category": "rube_goldberg",
+  "qcode": "Q32907",
+  "license": "Apache-2.0",
+  "author": "Aether-Forge usd-brep",
+  "asset_extents": [
+    0.018,
+    0.18,
+    0.09
+  ],
+  "mass": 0.4082,
+  "rigid_body_count": 1,
+  "manifold": true,
+  "tessellate_ms": 0.3,
+  "visual_mesh": {
+    "points": [
+      [
+        -0.009,
+        -0.09,
+        0.045
+      ],
+      [
+        -0.009,
+        -0.09,
+        -0.045
+      ],
+      [
+        0.009,
+        -0.09,
+        -0.045
+      ],
+      [
+        0.009,
+        -0.09,
+        0.045
+      ],
+      [
+        -0.009,
+        0.09,
+        0.045
+      ],
+      [
+        0.009,
+        0.09,
+        0.045
+      ],
+      [
+        -0.009,
+        0.09,
+        -0.045
+      ],
+      [
+        0.009,
+        0.09,
+        -0.045
+      ]
+    ],
+    "normals": [
+      [
+        -0.57735,
+        -0.57735,
+        0.57735
+      ],
+      [
+        -0.57735,
+        -0.57735,
+        -0.57735
+      ],
+      [
+        0.57735,
+        -0.57735,
+        -0.57735
+      ],
+      [
+        0.57735,
+        -0.57735,
+        0.57735
+      ],
+      [
+        -0.57735,
+        0.57735,
+        0.57735
+      ],
+      [
+        0.57735,
+        0.57735,
+        0.57735
+      ],
+      [
+        -0.57735,
+        0.57735,
+        -0.57735
+      ],
+      [
+        0.57735,
+        0.57735,
+        -0.57735
+      ]
+    ],
+    "indices": [
+      0,
+      2,
+      3,
+      2,
+      0,
+      1,
+      0,
+      5,
+      4,
+      5,
+      0,
+      3,
+      4,
+      7,
+      6,
+      7,
+      4,
+      5,
+      3,
+      7,
+      5,
+      7,
+      3,
+      2,
+      1,
+      7,
+      2,
+      7,
+      1,
+      6,
+      0,
+      6,
+      1,
+      6,
+      0,
+      4
+    ],
+    "color": [
+      0.92,
+      0.9,
+      0.85
+    ],
+    "metallic": 0.05,
+    "roughness": 0.28
+  },
+  "rigid_bodies": [
+    {
+      "name": "brep_domino",
+      "usd_path": "/brep_domino",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mass": 0.4082,
+      "center_of_mass": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "inertia": [
+        0.0012,
+        0.0004,
+        0.001
+      ],
+      "physics_material": {
+        "name": "phenolic_domino",
+        "label": "Phenolic Domino",
+        "static_friction": 0.35,
+        "dynamic_friction": 0.28,
+        "restitution": 0.45,
+        "density": 1400.0
+      },
+      "colliders": [
+        {
+          "name": "domino_box",
+          "type": "box",
+          "size": [
+            0.018,
+            0.18,
+            0.09
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "material": "phenolic_domino"
+        }
+      ],
+      "grasp_lines": [
+        {
+          "name": "grasp_top",
+          "a": [
+            0.0,
+            0.04,
+            -0.03
+          ],
+          "b": [
+            0.0,
+            0.04,
+            0.03
+          ]
+        }
+      ]
+    }
+  ],
+  "joints": []
+}
