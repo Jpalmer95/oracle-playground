@@ -65,7 +65,7 @@ func _process(_delta: float) -> void:
 	var stab := "on" if _player.stabilize_upright else "off"
 	var pmode := "ground" if _player.is_ground_mode() else "flight"
 	var cnj := OracleConjure.last_status if OracleConjure != null else "Ready"
-	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s   conjure: %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip(G)=power-grab  pinch(B)=balance-grab  stick=move  A=jump --\nT/B-Y = mode/hub   P or / = Oracle Conjure prompt bar\n1-5 mats  6 crate  7 hazard  8 hammer  9 bowl  0 marble  - chute  = staff  U undo  Bksp clear" % [
+	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s   conjure: %s\n-- desktop flight: WASD=fly/strafe  Space/C=up/down  Shift=turbo  Wheel=gear --\n-- vr flight: triggers=hand-thrust  grip=turbo  sticks=turn/vert  click=gear --\n-- grab (any mode): LMB or G = power-grab   RMB or B = light balance-pinch --\nT/B-Y = flight/ground/hub   P or / = Oracle Conjure prompt bar   R = reset\n1-5 mats  6 crate  7 hazard  8 hammer  9 bowl  0 marble  - chute  = staff  U undo  Bksp clear" % [
 		mode,
 		pmode,
 		_player.linear_velocity.length(),

@@ -182,6 +182,7 @@ func _enter_xr() -> void:
 	Engine.physics_ticks_per_second = 90
 	get_viewport().use_xr = true
 	xr_active = true
+	lock_rotation = true
 	if _desktop_cam:
 		_desktop_cam.current = false
 	if _body_mesh:
@@ -209,7 +210,10 @@ func _set_desktop_mode() -> void:
 	xr_active = false
 	if _desktop_cam:
 		_desktop_cam.current = true
-	if not DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() != "headless":
+		# Lock physics body angular axes in interactive play so collisions
+		# never tip/roll/spiral the camera (SuperSonic-style horizon lock).
+		lock_rotation = not apply_at_hands
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_mouse_captured = true
 	mode_changed.emit("desktop")
@@ -222,9 +226,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_mouse_captured = not _mouse_captured
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _mouse_captured else Input.MOUSE_MODE_VISIBLE
+	if event is InputEventMouseButton and event.pressed and _mouse_captured:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			gear = mini(max_gear, gear + 1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			gear = maxi(1, gear - 1)
 	if event is InputEventMouseMotion and _mouse_captured:
 		look_yaw -= event.relative.x * look_sensitivity
-		look_pitch = clampf(look_pitch - event.relative.y * look_sensitivity, -1.2, 1.2)
+		look_pitch = clampf(look_pitch - event.relative.y * look_sensitivity, -1.35, 1.35)
 		_desktop_cam.rotation = Vector3(look_pitch, 0, 0)
 		rotation = Vector3(0, look_yaw, 0)
 		angular_velocity = Vector3.ZERO
@@ -254,8 +263,16 @@ func _flight_physics(delta: float) -> void:
 	if right_amt > 0.02:
 		_fire_hand(_active_right(), right_amt * boost)
 
-	# Joystick yaw turn + vertical (SuperSonic-style, extended).
-	# Both sticks X = yaw. Left stick Y = ascend/descend (vertical thrust).
+	# SuperSonic handleDesktopInput: WASD + Space/C 3D camera-relative flight on desktop!
+	if not xr_active and DisplayServer.get_name() != "headless":
+		_desktop_flight_move(boost)
+		# Allow grabbing/balancing props while hovering in desktop flight mode too
+		_left_grabber.hand = _active_left()
+		_right_grabber.hand = _active_right()
+		_handle_grab(_left_grabber, _grip_left())
+		_handle_grab(_right_grabber, _grip_right())
+
+	# Joystick yaw turn + vertical (SuperSonic-style, VR sticks).
 	var yaw := _yaw_axis()
 	if absf(yaw) > 0.15:
 		var turn := -yaw * turn_rate * delta
@@ -279,11 +296,39 @@ func _flight_physics(delta: float) -> void:
 		linear_velocity = linear_velocity.limit_length(max_speed)
 
 	if stabilize_upright:
-		_stabilize(delta)
+		if lock_rotation:
+			angular_velocity = Vector3.ZERO
+		else:
+			_stabilize(delta)
 
 	# XR: move the tracked rig with the body, position only (never rotation).
 	if xr_active and _xr_origin:
 		_xr_origin.global_position = global_position
+
+
+func _desktop_flight_move(boost: float) -> void:
+	## Port of SuperSonic's handleDesktopInput: W/S fly along 3D camera look,
+	## A/D strafe left/right, Space/C (or Ctrl) ascend/descend smoothly.
+	if _desktop_cam == null:
+		return
+	var forward := -_desktop_cam.global_transform.basis.z.normalized()
+	var right := _desktop_cam.global_transform.basis.x.normalized()
+	var move_dir := Vector3.ZERO
+	if Input.is_physical_key_pressed(KEY_W):
+		move_dir += forward
+	if Input.is_physical_key_pressed(KEY_S):
+		move_dir -= forward
+	if Input.is_physical_key_pressed(KEY_D):
+		move_dir += right
+	if Input.is_physical_key_pressed(KEY_A):
+		move_dir -= right
+	if Input.is_physical_key_pressed(KEY_SPACE):
+		move_dir += Vector3.UP
+	if Input.is_physical_key_pressed(KEY_C) or Input.is_physical_key_pressed(KEY_CTRL):
+		move_dir -= Vector3.UP
+	if move_dir.length_squared() > 0.001:
+		var accel := thrust_accel * float(gear) * throttle_scale * boost * 0.65
+		apply_central_force(move_dir.normalized() * accel * mass)
 
 
 func _ground_physics(delta: float) -> void:
@@ -395,9 +440,9 @@ func _grip_left() -> float:
 		return _xr_axis(_xr_left, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	if Input.is_physical_key_pressed(KEY_B):
+	if Input.is_physical_key_pressed(KEY_B) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		return 0.25
-	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
+	return 1.0 if (Input.is_physical_key_pressed(KEY_G) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) else 0.0
 
 
 func _grip_right() -> float:
@@ -405,9 +450,9 @@ func _grip_right() -> float:
 		return _xr_axis(_xr_right, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	if Input.is_physical_key_pressed(KEY_B):
+	if Input.is_physical_key_pressed(KEY_B) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		return 0.25
-	return 1.0 if Input.is_physical_key_pressed(KEY_G) else 0.0
+	return 1.0 if (Input.is_physical_key_pressed(KEY_G) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) else 0.0
 
 
 func _handle_bow() -> void:
@@ -488,9 +533,7 @@ func left_trigger() -> float:
 		return _xr_axis(_xr_left, "trigger")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	var key := Input.is_physical_key_pressed(KEY_Q)
-	var mouse := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	return 1.0 if (key or mouse) else 0.0
+	return 1.0 if Input.is_physical_key_pressed(KEY_Q) else 0.0
 
 
 func right_trigger() -> float:
@@ -498,9 +541,7 @@ func right_trigger() -> float:
 		return _xr_axis(_xr_right, "trigger")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	var key := Input.is_physical_key_pressed(KEY_E)
-	var mouse := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
-	return 1.0 if (key or mouse) else 0.0
+	return 1.0 if Input.is_physical_key_pressed(KEY_E) else 0.0
 
 
 func _turbo_held() -> bool:
@@ -515,8 +556,7 @@ func _turbo_held() -> bool:
 
 
 func _yaw_axis() -> float:
-	# Both sticks steer yaw. Combine with a deadzone so right- or left-handed
-	# flight works identically. SuperSonic uses axes[2] (right stick).
+	# VR sticks steer yaw. SuperSonic uses axes[2] (right stick).
 	if xr_active:
 		var x := 0.0
 		if _xr_right:
@@ -524,28 +564,14 @@ func _yaw_axis() -> float:
 		if _xr_left:
 			x += _xr_left.get_vector2("primary").x
 		return clampf(x, -1.0, 1.0)
-	if DisplayServer.get_name() == "headless":
-		return 0.0
-	var x := 0.0
-	if Input.is_physical_key_pressed(KEY_A):
-		x -= 1.0
-	if Input.is_physical_key_pressed(KEY_D):
-		x += 1.0
-	return x
+	return 0.0
 
 
 func _vertical_axis() -> float:
-	# Left stick Y = ascend (up) / descend (down).
+	# VR Left stick Y = ascend (up) / descend (down).
 	if xr_active and _xr_left:
 		return _xr_left.get_vector2("primary").y
-	if DisplayServer.get_name() == "headless":
-		return 0.0
-	var y := 0.0
-	if Input.is_physical_key_pressed(KEY_W):
-		y += 1.0
-	if Input.is_physical_key_pressed(KEY_S):
-		y -= 1.0
-	return y
+	return 0.0
 
 
 func _handle_gear_clicks() -> void:

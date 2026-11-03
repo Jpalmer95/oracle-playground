@@ -26,10 +26,15 @@ cd /home/jonathan/dev/oracle-playground
 
 | Input | Action |
 | --- | --- |
-| Mouse | Look |
-| Q or LMB | Left thruster |
-| E or RMB | Right thruster |
-| Shift | Turbo |
+| Mouse | 3D Look (horizon-locked, zero spiral/tumble) |
+| W / S | Fly forward / backward along camera look (or walk in Ground mode) |
+| A / D | Strafe left / right |
+| Space / C (or Ctrl) | Fly up / down (`Space` jumps in Ground mode) |
+| Mouse Wheel or `[` / `]` | Shift flight gear `1..5` |
+| Shift | Turbo (`3.8x` SuperSonic boost) |
+| LMB or G | Power grab / throw (`grip_pressure = 1.0`, works in Flight & Ground mode) |
+| RMB or B | Light pinch / balance grab (`grip_pressure = 0.25`, works in Flight & Ground mode) |
+| Q / E | Left / Right hand thruster |
 | T | Toggle flight / ground mode |
 | F | Toggle upright stabilize |
 | 1–5 | Spawn ice / rubber / metal / wood / glass cube |
@@ -42,9 +47,6 @@ cd /home/jonathan/dev/oracle-playground
 | = | Spawn B-Rep Weighted Balance Staff (`+0.38m` shifted CoM) |
 | P or / | Open **Oracle Conjure Prompt Bar** (type any object name + Enter) |
 | U / Backspace | Undo / clear spawned |
-| G | Power grab / throw (`grip_pressure = 1.0`, ground mode) |
-| B | Light pinch / balance grab (`grip_pressure = 0.25`, ground mode) |
-| WASD | Walk (ground mode) / yaw+vertical (flight) |
 | R | Reset player pose |
 | F12 | Dump `user://agent_view.png` for agents |
 | Esc | Release / recapture mouse |
