@@ -258,7 +258,7 @@ func _spawn_pos() -> Vector3:
 	# Spawn ~1.5 m in front of the player's facing.
 	if player == null:
 		return Vector3(0, 1.5, 0)
-	var fwd := -player.global_transform.basis.z.normalized()
+	var fwd := player.aim_forward() if player.has_method("aim_forward") else -player.global_transform.basis.z.normalized()
 	return player.global_position + fwd * 1.5 + Vector3.UP * 0.2
 
 

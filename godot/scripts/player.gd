@@ -31,6 +31,8 @@ var booster_fuel := 100.0
 var xr_active := false
 var look_yaw := 0.0
 var look_pitch := 0.0
+var _bank_roll := 0.0
+var _yaw_rate := 0.0
 var spawn_xform := Transform3D.IDENTITY
 var _gear_cooldown := 0.0
 var _left_click_was := false
@@ -103,7 +105,10 @@ func _ensure_rig() -> void:
 		_desktop_cam = Camera3D.new()
 		_desktop_cam.name = "DesktopCamera"
 		_desktop_cam.position = Vector3(0, 1.5, 0)
+		_desktop_cam.rotation_order = EULER_ORDER_YXZ
 		add_child(_desktop_cam)
+	else:
+		_desktop_cam.rotation_order = EULER_ORDER_YXZ
 
 	# Virtual hands for desktop / tests (always present).
 	_left = get_node_or_null("VirtualLeft")
@@ -232,11 +237,29 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			gear = maxi(1, gear - 1)
 	if event is InputEventMouseMotion and _mouse_captured:
-		look_yaw -= event.relative.x * look_sensitivity
-		look_pitch = clampf(look_pitch - event.relative.y * look_sensitivity, -1.35, 1.35)
-		_desktop_cam.rotation = Vector3(look_pitch, 0, 0)
-		rotation = Vector3(0, look_yaw, 0)
-		angular_velocity = Vector3.ZERO
+		apply_mouse_look(event.relative)
+
+
+func apply_mouse_look(relative: Vector2) -> void:
+	## Free 360-degree 3D orb look applied directly to DesktopCamera (YXZ order)
+	## so Jolt's RigidBody3D rotation lock never blocks or snaps horizontal turning.
+	var dyaw := -relative.x * look_sensitivity
+	look_yaw = wrapf(look_yaw + dyaw, -PI, PI)
+	look_pitch = clampf(look_pitch - relative.y * look_sensitivity, -1.52, 1.52)
+	_yaw_rate = clampf(_yaw_rate + dyaw * 8.0, -0.45, 0.45)
+	if _desktop_cam:
+		_desktop_cam.rotation_order = EULER_ORDER_YXZ
+		_desktop_cam.rotation = Vector3(look_pitch, look_yaw, _bank_roll)
+
+
+func aim_forward() -> Vector3:
+	if xr_active and _xr_origin:
+		var xrcam := _xr_origin.get_node_or_null("XRCamera3D") as Node3D
+		if xrcam:
+			return -xrcam.global_transform.basis.z.normalized()
+	if _desktop_cam:
+		return -_desktop_cam.global_transform.basis.z.normalized()
+	return -global_transform.basis.z.normalized()
 
 
 func _physics_process(delta: float) -> void:
@@ -262,15 +285,27 @@ func _flight_physics(delta: float) -> void:
 		_fire_hand(_active_left(), left_amt * boost)
 	if right_amt > 0.02:
 		_fire_hand(_active_right(), right_amt * boost)
+	if (left_amt > 0.02 or right_amt > 0.02) and not xr_active and DisplayServer.get_name() != "headless":
+		var spd := linear_velocity.length()
+		if spd > 0.5:
+			linear_velocity = linear_velocity.lerp(aim_forward() * spd, clampf(8.0 * delta, 0.0, 1.0))
 
-	# SuperSonic handleDesktopInput: WASD + Space/C 3D camera-relative flight on desktop!
+	# SuperSonic handleDesktopInput + Oracle Orb 3D velocity vectoring on desktop!
 	if not xr_active and DisplayServer.get_name() != "headless":
-		_desktop_flight_move(boost)
+		_desktop_flight_move(boost, delta)
 		# Allow grabbing/balancing props while hovering in desktop flight mode too
 		_left_grabber.hand = _active_left()
 		_right_grabber.hand = _active_right()
 		_handle_grab(_left_grabber, _grip_left())
 		_handle_grab(_right_grabber, _grip_right())
+
+	# Smoothly bleed off visual bank roll toward level and update camera basis
+	_yaw_rate = lerpf(_yaw_rate, 0.0, clampf(10.0 * delta, 0.0, 1.0))
+	var target_bank := _yaw_rate * 0.55 if not _ground_mode else 0.0
+	_bank_roll = lerpf(_bank_roll, target_bank, clampf(12.0 * delta, 0.0, 1.0))
+	if not xr_active and _desktop_cam:
+		_desktop_cam.rotation_order = EULER_ORDER_YXZ
+		_desktop_cam.rotation = Vector3(look_pitch, look_yaw, _bank_roll)
 
 	# Joystick yaw turn + vertical (SuperSonic-style, VR sticks).
 	var yaw := _yaw_axis()
@@ -279,8 +314,9 @@ func _flight_physics(delta: float) -> void:
 		if xr_active:
 			_xr_origin.rotate_y(turn)
 		else:
-			look_yaw += turn
-			rotation = Vector3(0, look_yaw, 0)
+			look_yaw = wrapf(look_yaw + turn, -PI, PI)
+			if _desktop_cam:
+				_desktop_cam.rotation = Vector3(look_pitch, look_yaw, _bank_roll)
 
 	var vert := _vertical_axis()
 	if absf(vert) > 0.15:
@@ -306,9 +342,10 @@ func _flight_physics(delta: float) -> void:
 		_xr_origin.global_position = global_position
 
 
-func _desktop_flight_move(boost: float) -> void:
-	## Port of SuperSonic's handleDesktopInput: W/S fly along 3D camera look,
-	## A/D strafe left/right, Space/C (or Ctrl) ascend/descend smoothly.
+func _desktop_flight_move(boost: float, delta: float = 0.016) -> void:
+	## Oracle Orb 3D flight: W/S fly along full 3D camera vector (dive/climb/turn
+	## in any direction), A/D strafe, Space/C ascend/descend, and steering the
+	## mouse smoothly redirects existing velocity along the new look direction!
 	if _desktop_cam == null:
 		return
 	var forward := -_desktop_cam.global_transform.basis.z.normalized()
@@ -327,8 +364,13 @@ func _desktop_flight_move(boost: float) -> void:
 	if Input.is_physical_key_pressed(KEY_C) or Input.is_physical_key_pressed(KEY_CTRL):
 		move_dir -= Vector3.UP
 	if move_dir.length_squared() > 0.001:
-		var accel := thrust_accel * float(gear) * throttle_scale * boost * 0.65
-		apply_central_force(move_dir.normalized() * accel * mass)
+		var wish := move_dir.normalized()
+		var accel := thrust_accel * float(gear) * throttle_scale * boost * 0.75
+		apply_central_force(wish * accel * mass)
+		# Velocity vectoring: smoothly steer current momentum into the new 3D aim direction
+		var speed := linear_velocity.length()
+		if speed > 0.5:
+			linear_velocity = linear_velocity.lerp(wish * speed, clampf(8.0 * delta, 0.0, 1.0))
 
 
 func _ground_physics(delta: float) -> void:
@@ -350,22 +392,30 @@ func _ground_physics(delta: float) -> void:
 
 	# A grounded body must settle; keep it upright and damp spin lightly.
 	if stabilize_upright:
-		_stabilize(delta)
+		if lock_rotation:
+			angular_velocity = Vector3.ZERO
+		else:
+			_stabilize(delta)
+	if not xr_active and _desktop_cam:
+		_desktop_cam.rotation_order = EULER_ORDER_YXZ
+		_desktop_cam.rotation = Vector3(look_pitch, look_yaw, 0.0)
 
 	if xr_active and _xr_origin:
 		_xr_origin.global_position = global_position
 
 
-func _move_walk(delta: float) -> void:
+func _move_walk(_delta: float) -> void:
 	var stick := _move_axis()
 	if stick.length() < 0.15:
 		return
-	var yaw := 0.0
+	var cam_basis := global_transform.basis
 	if xr_active and _xr_origin:
-		yaw = _xr_origin.global_transform.basis.get_euler().y
-	else:
-		yaw = look_yaw
-	var dir := Vector3(stick.x, 0.0, stick.y).rotated(Vector3.UP, -yaw)
+		cam_basis = _xr_origin.global_transform.basis
+	elif _desktop_cam:
+		cam_basis = _desktop_cam.global_transform.basis
+	var flat_fwd := Vector3(-cam_basis.z.x, 0.0, -cam_basis.z.z).normalized()
+	var flat_right := Vector3(cam_basis.x.x, 0.0, cam_basis.x.z).normalized()
+	var dir := (flat_right * stick.x - flat_fwd * stick.y).normalized()
 	# Replace horizontal velocity while preserving gravity-driven vertical.
 	linear_velocity = Vector3(dir.x * walk_speed, linear_velocity.y, dir.z * walk_speed)
 
@@ -379,8 +429,10 @@ func _turn_walk(_delta: float) -> void:
 	if xr_active:
 		_xr_origin.rotate_y(turn)
 	else:
-		look_yaw += turn
-		rotation = Vector3(0, look_yaw, 0)
+		look_yaw = wrapf(look_yaw + turn, -PI, PI)
+		if _desktop_cam:
+			_desktop_cam.rotation_order = EULER_ORDER_YXZ
+			_desktop_cam.rotation = Vector3(look_pitch, look_yaw, 0.0)
 
 
 func _move_axis() -> Vector2:

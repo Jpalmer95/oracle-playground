@@ -51,7 +51,7 @@ func _on_prompt_submitted(text: String) -> void:
 	_prompt_box.clear()
 	toggle_prompt_bar()
 	if clean != "" and _player != null:
-		var fwd := -_player.global_transform.basis.z
+		var fwd := _player.aim_forward() if _player.has_method("aim_forward") else -_player.global_transform.basis.z
 		var pos := _player.global_position + Vector3.UP * 1.2 + fwd * 2.0
 		OracleConjure.spawn_prompt(clean, pos, "auto", true)
 

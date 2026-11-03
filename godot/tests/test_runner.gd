@@ -668,6 +668,20 @@ func _test_phase_d_conjure_and_zerogpu_compiler() -> void:
 	var holder := OracleConjure._make_holo_placeholder("ancient golden chalice", Vector3(0, 3, -2), world)
 	_ok(holder is RigidBody3D and holder.is_in_group("grabbable"), "Holo-Placeholder is a grabbable RigidBody3D")
 
+	# 5. Verify 360-degree Desktop Orb mouse look works even when lock_rotation=true on Jolt RigidBody3D
+	var orb_player := _make_player(world)
+	orb_player.lock_rotation = true
+	await get_tree().physics_frame
+	var fwd_before := orb_player.aim_forward()
+	# Simulate turning mouse 90 degrees right + pitching up
+	orb_player.apply_mouse_look(Vector2(628.0, -300.0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var fwd_after := orb_player.aim_forward()
+	_ok(fwd_before.angle_to(fwd_after) > 1.0 and fwd_after.y > 0.3,
+		"360 orb mouse steering turns freely in yaw+pitch with lock_rotation=true (before=%s after=%s)" % [
+			fwd_before, fwd_after])
+
 	OracleBuilder.clear()
 	world.queue_free()
 	await get_tree().process_frame

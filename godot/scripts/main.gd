@@ -104,4 +104,6 @@ func _front_of(player: Node3D) -> Vector3:
 	if player == null:
 		return Vector3(0, 1.5, 0)
 	var forward := -player.global_transform.basis.z
+	if player.has_method("aim_forward"):
+		forward = player.aim_forward()
 	return player.global_position + Vector3.UP * 1.2 + forward * 2.0
