@@ -682,6 +682,21 @@ func _test_phase_d_conjure_and_zerogpu_compiler() -> void:
 		"360 orb mouse steering turns freely in yaw+pitch with lock_rotation=true (before=%s after=%s)" % [
 			fwd_before, fwd_after])
 
+	# 6. Verify compact capsule radius (<=0.15m), extended reach (>=2.0m), and aim raycast probe
+	var col_node := orb_player.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	_ok(col_node != null and col_node.shape is CapsuleShape3D and (col_node.shape as CapsuleShape3D).radius <= 0.15,
+		"player capsule has compact <=0.15m radius for close-up grabbing")
+	_ok(orb_player.reach >= 2.0, "player reach >= 2.0m for tabletop/floor grabbing")
+	orb_player.look_yaw = 0.0
+	orb_player.look_pitch = 0.0
+	orb_player.apply_mouse_look(Vector2.ZERO)
+	var target_prop := OracleBuilder.spawn_tool("sr_hammer", orb_player.global_position + Vector3(0, 1.5, -1.2))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var probe := orb_player.probe_grab_target()
+	_ok(not probe.is_empty() and probe.get("body") == target_prop,
+		"probe_grab_target() detects grabbable prop along center pointer dot raycast")
+
 	OracleBuilder.clear()
 	world.queue_free()
 	await get_tree().process_frame

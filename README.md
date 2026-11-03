@@ -30,10 +30,12 @@ cd /home/jonathan/dev/oracle-playground
 | W / S | Fly forward / backward along camera look (or walk in Ground mode) |
 | A / D | Strafe left / right |
 | Space / C (or Ctrl) | Fly up / down (`Space` jumps in Ground mode) |
-| Mouse Wheel or `[` / `]` | Shift flight gear `1..5` |
+| Mouse Wheel or `[` / `]` | Shift flight gear `1..5` (or Pull / Push held object while grabbing!) |
 | Shift | Turbo (`3.8x` SuperSonic boost) |
-| LMB or G | Power grab / throw (`grip_pressure = 1.0`, works in Flight & Ground mode) |
-| RMB or B | Light pinch / balance grab (`grip_pressure = 0.25`, works in Flight & Ground mode) |
+| LMB | Grab with **Left Hand** at center pointer dot (`grip_pressure = 1.0`) |
+| RMB | Grab with **Right Hand** at center pointer dot (`grip_pressure = 1.0`) |
+| LMB + RMB or G | Grab with **Both Hands** simultaneously ($\pm 14\text{ cm}$ two-hand spread) |
+| B | **Light Balance Pinch** (`grip_pressure = 0.25` — hold alone or with `LMB`/`RMB`) |
 | Q / E | Left / Right hand thruster |
 | T | Toggle flight / ground mode |
 | F | Toggle upright stabilize |

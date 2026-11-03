@@ -24,7 +24,7 @@ signal mode_changed(mode: String)
 # Ground mode (throw/grab/bow). Separate from flight — no shared inputs.
 @export var walk_speed := 3.5
 @export var jump_impulse := 5.0
-@export var reach := 0.7
+@export var reach := 2.2
 
 var gear := 2
 var booster_fuel := 100.0
@@ -50,6 +50,10 @@ var _xr_right: XRController3D
 var _xr_origin: XROrigin3D
 var _desktop_cam: Camera3D
 var _body_mesh: MeshInstance3D
+var _col_shape: CollisionShape3D
+var _aim_marker: MeshInstance3D
+var _hold_distance := 0.95
+var _last_probe: Dictionary = {}
 var _mouse_captured := false
 
 
@@ -124,29 +128,51 @@ func _ensure_rig() -> void:
 		_desktop_cam.add_child(_right)
 		_right.position = Vector3(0.25, -0.15, -0.4)
 
-	if get_node_or_null("CollisionShape3D") == null:
-		var col := CollisionShape3D.new()
+	_col_shape = get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if _col_shape == null:
+		_col_shape = CollisionShape3D.new()
+		_col_shape.name = "CollisionShape3D"
 		var cap := CapsuleShape3D.new()
-		cap.radius = 0.28
-		cap.height = 1.6
-		col.shape = cap
-		col.position = Vector3(0, 0.8, 0)
-		add_child(col)
+		# Compact collision profile so the player can get right up close to tables/props
+		cap.radius = 0.14
+		cap.height = 0.38 if (not _ground_mode and DisplayServer.get_name() != "headless") else 1.44
+		_col_shape.shape = cap
+		_col_shape.position = Vector3(0, 1.35, 0) if (not _ground_mode and DisplayServer.get_name() != "headless") else Vector3(0, 0.72, 0)
+		add_child(_col_shape)
 	_body_mesh = get_node_or_null("BodyMesh") as MeshInstance3D
 	if _body_mesh == null:
 		_body_mesh = MeshInstance3D.new()
 		_body_mesh.name = "BodyMesh"
 		var mesh := CapsuleMesh.new()
-		mesh.radius = 0.26
-		mesh.height = 1.55
+		mesh.radius = 0.14
+		mesh.height = 0.38
 		_body_mesh.mesh = mesh
-		_body_mesh.position = Vector3(0, 0.8, 0)
+		_body_mesh.position = Vector3(0, 1.35, 0)
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = Color(0.12, 0.12, 0.14)
 		mat.metallic = 0.4
 		mat.roughness = 0.45
 		_body_mesh.material_override = mat
+		# Hide first-person body mesh in interactive play so it never occludes downward view
+		_body_mesh.visible = (DisplayServer.get_name() == "headless")
 		add_child(_body_mesh)
+	if _aim_marker == null:
+		_aim_marker = MeshInstance3D.new()
+		_aim_marker.name = "AimContactMarker"
+		var sm := SphereMesh.new()
+		sm.radius = 0.016
+		sm.height = 0.032
+		_aim_marker.mesh = sm
+		var amat := StandardMaterial3D.new()
+		amat.albedo_color = Color(0.25, 0.95, 1.0, 0.9)
+		amat.emission_enabled = true
+		amat.emission = Color(0.2, 0.9, 1.0)
+		amat.emission_energy_multiplier = 2.5
+		amat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_aim_marker.material_override = amat
+		_aim_marker.top_level = true
+		_aim_marker.visible = false
+		add_child(_aim_marker)
 
 	# Grabbers (ground mode only) — one per hand.
 	if _left_grabber == null:
@@ -232,10 +258,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		_mouse_captured = not _mouse_captured
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _mouse_captured else Input.MOUSE_MODE_VISIBLE
 	if event is InputEventMouseButton and event.pressed and _mouse_captured:
+		var holding_any := (_left_grabber != null and _left_grabber.has_body()) or (_right_grabber != null and _right_grabber.has_body())
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			gear = mini(max_gear, gear + 1)
+			if holding_any:
+				_hold_distance = clampf(_hold_distance + 0.12, 0.35, reach)
+			else:
+				gear = mini(max_gear, gear + 1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			gear = maxi(1, gear - 1)
+			if holding_any:
+				_hold_distance = clampf(_hold_distance - 0.12, 0.35, reach)
+			else:
+				gear = maxi(1, gear - 1)
 	if event is InputEventMouseMotion and _mouse_captured:
 		apply_mouse_look(event.relative)
 
@@ -293,11 +326,7 @@ func _flight_physics(delta: float) -> void:
 	# SuperSonic handleDesktopInput + Oracle Orb 3D velocity vectoring on desktop!
 	if not xr_active and DisplayServer.get_name() != "headless":
 		_desktop_flight_move(boost, delta)
-		# Allow grabbing/balancing props while hovering in desktop flight mode too
-		_left_grabber.hand = _active_left()
-		_right_grabber.hand = _active_right()
-		_handle_grab(_left_grabber, _grip_left())
-		_handle_grab(_right_grabber, _grip_right())
+		_step_desktop_grab()
 
 	# Smoothly bleed off visual bank roll toward level and update camera basis
 	_yaw_rate = lerpf(_yaw_rate, 0.0, clampf(10.0 * delta, 0.0, 1.0))
@@ -384,8 +413,11 @@ func _ground_physics(delta: float) -> void:
 	_handle_jump()
 
 	# Grab/throw: grip to hold, release to throw.
-	_handle_grab(_left_grabber, _grip_left())
-	_handle_grab(_right_grabber, _grip_right())
+	if not xr_active and DisplayServer.get_name() != "headless":
+		_step_desktop_grab()
+	else:
+		_handle_grab(_left_grabber, _grip_left())
+		_handle_grab(_right_grabber, _grip_right())
 
 	# Bow draw + fire.
 	_handle_bow()
@@ -492,9 +524,10 @@ func _grip_left() -> float:
 		return _xr_axis(_xr_left, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	if Input.is_physical_key_pressed(KEY_B) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		return 0.25
-	return 1.0 if (Input.is_physical_key_pressed(KEY_G) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) else 0.0
+	var want_left := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_physical_key_pressed(KEY_G)
+	if not want_left:
+		return 0.0
+	return 0.25 if Input.is_physical_key_pressed(KEY_B) else 1.0
 
 
 func _grip_right() -> float:
@@ -502,9 +535,179 @@ func _grip_right() -> float:
 		return _xr_axis(_xr_right, "grip")
 	if DisplayServer.get_name() == "headless":
 		return 0.0
-	if Input.is_physical_key_pressed(KEY_B) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		return 0.25
-	return 1.0 if (Input.is_physical_key_pressed(KEY_G) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) else 0.0
+	var pinch_key := Input.is_physical_key_pressed(KEY_B)
+	var want_right := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_physical_key_pressed(KEY_G) or pinch_key
+	if not want_right:
+		return 0.0
+	return 0.25 if pinch_key else 1.0
+
+
+func probe_grab_target() -> Dictionary:
+	## Casts a 3D aim ray from DesktopCamera (with narrow cylinder fallback)
+	## so the center pointer dot shows exactly which item and surface point
+	## will be grabbed, its mass, CoM offset, and any SimReady GSP.001 grasp line.
+	if _desktop_cam == null or not is_inside_tree():
+		return {}
+	var origin := _desktop_cam.global_position
+	var fwd := aim_forward()
+	var space := get_world_3d().direct_space_state
+	var hit_body: RigidBody3D = null
+	var hit_pos := Vector3.ZERO
+	var hit_dist := INF
+
+	var q := PhysicsRayQueryParameters3D.create(origin, origin + fwd * reach, 4 | 2 | 1)
+	q.exclude = [get_rid()]
+	var ray_hit := space.intersect_ray(q)
+	if not ray_hit.is_empty():
+		var col: Object = ray_hit.get("collider")
+		if col is RigidBody3D and col != self and (col.is_in_group("grabbable") or (col.collision_layer & (4 | 2)) != 0):
+			hit_body = col as RigidBody3D
+			hit_pos = ray_hit.get("position", hit_body.global_position)
+			hit_dist = origin.distance_to(hit_pos)
+
+	# Narrow aim-cone fallback for thin rods/marbles near the center dot
+	if hit_body == null:
+		for node in get_tree().get_nodes_in_group("grabbable"):
+			if not (node is RigidBody3D) or node == self:
+				continue
+			var rb := node as RigidBody3D
+			var to_rb := rb.global_position - origin
+			var along := to_rb.dot(fwd)
+			if along < 0.15 or along > reach:
+				continue
+			var closest_ray_pt := origin + fwd * along
+			var perp := (rb.global_position - closest_ray_pt).length()
+			if perp < 0.32 and along < hit_dist:
+				hit_body = rb
+				hit_pos = rb.global_position
+				hit_dist = along
+
+	if hit_body == null:
+		return {}
+
+	var world_com := hit_body.global_transform * hit_body.center_of_mass
+	var com_offset := hit_pos.distance_to(world_com)
+	var snapped_line := ""
+	if hit_body.has_meta("grasp_lines"):
+		var lines: Array = hit_body.get_meta("grasp_lines")
+		for gl in lines:
+			if gl is Dictionary:
+				var s_arr: Array = gl.get("start", [0, 0, 0])
+				var e_arr: Array = gl.get("end", [0, 0, 0])
+				var a := hit_body.to_global(Vector3(float(s_arr[0]), float(s_arr[1]), float(s_arr[2])))
+				var b := hit_body.to_global(Vector3(float(e_arr[0]), float(e_arr[1]), float(e_arr[2])))
+				var ab := b - a
+				var t := clampf((hit_pos - a).dot(ab) / maxf(ab.length_squared(), 1e-6), 0.0, 1.0)
+				var pt := a + ab * t
+				if hit_pos.distance_to(pt) <= 0.22:
+					snapped_line = String(gl.get("name", "grasp_line"))
+					break
+
+	var clean_name := String(hit_body.name)
+	if hit_body.get_parent() and hit_body.get_parent() != get_tree().root and clean_name.begins_with("RigidBody"):
+		clean_name = String(hit_body.get_parent().name)
+
+	return {
+		"body": hit_body,
+		"contact": hit_pos,
+		"distance": hit_dist,
+		"name": clean_name,
+		"mass": hit_body.mass,
+		"com_offset": com_offset,
+		"grasp_line": snapped_line,
+	}
+
+
+func get_grab_hud_state() -> Dictionary:
+	## Returns live target + hand hold state for the HUD pointer dot & readout.
+	var left_held := _left_grabber.held if _left_grabber else null
+	var right_held := _right_grabber.held if _right_grabber else null
+	var grip_l := _left_grabber.grip_pressure if (_left_grabber and left_held) else 0.0
+	var grip_r := _right_grabber.grip_pressure if (_right_grabber and right_held) else 0.0
+	return {
+		"probe": _last_probe,
+		"left_held": left_held,
+		"right_held": right_held,
+		"grip_l": grip_l,
+		"grip_r": grip_r,
+		"hold_distance": _hold_distance,
+	}
+
+
+func _step_desktop_grab() -> void:
+	_left_grabber.hand = _active_left()
+	_right_grabber.hand = _active_right()
+	_left_grabber.reach = reach
+	_right_grabber.reach = reach
+
+	_last_probe = probe_grab_target()
+	var want_l := _grip_left()
+	var want_r := _grip_right()
+	var both_wanted := want_l > 0.2 and want_r > 0.2
+
+	# Position VirtualLeft / VirtualRight at the active hold distance along camera view
+	var any_held := _left_grabber.has_body() or _right_grabber.has_body()
+	if not any_held and not _last_probe.is_empty():
+		_hold_distance = clampf(float(_last_probe.get("distance", 0.95)), 0.4, reach)
+
+	if _left and _right:
+		var spread := 0.14 if both_wanted or (_left_grabber.has_body() and _right_grabber.has_body()) else 0.0
+		_left.position = Vector3(-spread, -0.06, -_hold_distance)
+		_right.position = Vector3(spread, -0.06, -_hold_distance)
+
+	var cam_right := _desktop_cam.global_transform.basis.x.normalized() if _desktop_cam else Vector3.RIGHT
+
+	# Left hand grab / update / release
+	if want_l > 0.2 and not _left_grabber.has_body():
+		if not _last_probe.is_empty():
+			var b := _last_probe["body"] as RigidBody3D
+			var c: Vector3 = _last_probe["contact"]
+			if both_wanted:
+				c -= cam_right * 0.14
+			_left_grabber.begin_hold(b, c, want_l)
+		else:
+			_left_grabber.grab_nearest(want_l)
+	elif want_l > 0.2 and _left_grabber.has_body():
+		_left_grabber.grip_pressure = want_l
+	elif want_l <= 0.2 and _left_grabber.has_body():
+		_left_grabber.release()
+
+	# Right hand grab / update / release
+	if want_r > 0.2 and not _right_grabber.has_body():
+		if not _last_probe.is_empty():
+			var b := _last_probe["body"] as RigidBody3D
+			var c: Vector3 = _last_probe["contact"]
+			if both_wanted:
+				c += cam_right * 0.14
+			_right_grabber.begin_hold(b, c, want_r)
+		else:
+			_right_grabber.grab_nearest(want_r)
+	elif want_r > 0.2 and _right_grabber.has_body():
+		_right_grabber.grip_pressure = want_r
+	elif want_r <= 0.2 and _right_grabber.has_body():
+		_right_grabber.release()
+
+	# Update 3D surface contact marker
+	if _aim_marker:
+		if _left_grabber.has_body() or _right_grabber.has_body():
+			var held_b: RigidBody3D = _left_grabber.held if _left_grabber.has_body() else _right_grabber.held
+			var anchor_local: Vector3 = _left_grabber.local_grab_anchor if _left_grabber.has_body() else _right_grabber.local_grab_anchor
+			_aim_marker.visible = true
+			_aim_marker.global_position = held_b.to_global(anchor_local)
+			var m := _aim_marker.material_override as StandardMaterial3D
+			if m:
+				m.albedo_color = Color(1.0, 0.85, 0.25, 0.95)
+				m.emission = Color(1.0, 0.8, 0.2)
+		elif not _last_probe.is_empty():
+			_aim_marker.visible = true
+			_aim_marker.global_position = _last_probe["contact"]
+			var m := _aim_marker.material_override as StandardMaterial3D
+			if m:
+				var near_com := float(_last_probe.get("com_offset", 1.0)) < 0.08
+				m.albedo_color = Color(0.25, 1.0, 0.55, 0.95) if near_com else Color(0.25, 0.95, 1.0, 0.95)
+				m.emission = Color(0.2, 1.0, 0.5) if near_com else Color(0.2, 0.9, 1.0)
+		else:
+			_aim_marker.visible = false
 
 
 func _handle_bow() -> void:
@@ -565,19 +768,17 @@ func apply_thruster(world_dir: Vector3, amount: float, at_world: Vector3 = Vecto
 		apply_central_force(force)
 
 
-func _stabilize(_delta: float) -> void:
-	# PD controller to upright: torque = I * (-kp*angle - kd*angvel).
-	# Pure proportional (old code) is an UNDAMPED spring -> oscillates forever
-	# after a collision. The -kd*angular_velocity term is velocity feedback that
-	# bleeds oscillation off. Critical damping: kd = 2*sqrt(kp). Capsule inertia
-	# about its horizontal axis ≈ (1/12)m(3r^2 + h^2) ≈ 0.23m.
+func _stabilize(delta: float) -> void:
+	# Unconditionally stable upright PD controller: damp angular_velocity
+	# exponentially (never overshoots regardless of capsule radius/inertia)
+	# and apply proportional upright restoring torque around horizontal axes.
 	var up := global_transform.basis.y
-	var angle := up.cross(Vector3.UP)              # axis * sin(tilt), ~0 upright
-	var inertia := mass * 0.23                        # capsule, horizontal axis
-	var kp := stabilize_strength                      # 1/s^2
-	var kd := 2.0 * sqrt(stabilize_strength)          # 1/s, critical damping
-	var torque := (-angle * kp - angular_velocity * kd) * inertia
-	apply_torque(torque)
+	var angle := up.cross(Vector3.UP)
+	var kp := stabilize_strength
+	var kd := 2.0 * sqrt(stabilize_strength)
+	angular_velocity *= clampf(1.0 - kd * delta, 0.0, 1.0)
+	var inertia_horiz := mass * 0.04
+	apply_torque(-angle * kp * inertia_horiz)
 
 
 func left_trigger() -> float:
@@ -709,6 +910,11 @@ func set_ground_mode(on: bool) -> void:
 	gravity_scale = 1.0 if on else 0.0
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
+	if _col_shape and _col_shape.shape is CapsuleShape3D and DisplayServer.get_name() != "headless":
+		var cap := _col_shape.shape as CapsuleShape3D
+		cap.radius = 0.14
+		cap.height = 1.44 if on else 0.38
+		_col_shape.position = Vector3(0, 0.72, 0) if on else Vector3(0, 1.35, 0)
 	# Release any held props when switching modes so nothing stays frozen.
 	if _left_grabber:
 		_left_grabber.release()
