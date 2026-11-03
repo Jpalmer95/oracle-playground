@@ -264,14 +264,14 @@ gravity, volume). State changes bump a version counter the renderer watches.
 
 ---
 
-## Phase D — Scribblenauts 3-Tier Spawner & ZeroGPU 3D Physics Compiler
+## Phase D — Oracle Conjure 3-Tier Spawner & ZeroGPU 3D Physics Compiler
 
-- [x] `tools/scribblenauts_spawn.py` resolves any natural-language prompt across 3 tiers:
+- [x] `tools/conjure_spawn.py` resolves any natural-language prompt across 3 tiers:
   1. **Tier 1 (`simready`):** Matches local cache or live `NVIDIA-Omniverse/simready-central` OpenUSD index (`drinking_glass`, `bar_clamp`, `hammer`, `mug`, `bowl`, `scissors`, `playground_swing_seesaw`, `spiral_parcel_chute`, etc.).
   2. **Tier 2 (`brep`):** Synthesizes adjective-driven (`heavy`/`light`/`large`/`small`/`brass`/`steel`/`ice`/`wood`/`rubber`) parametric B-Rep CAD solids via `aether-forge` `usd-brep` in < 50 ms (`heavy brass ball` $\to$ `14.58 kg` analytic sphere).
   3. **Tier 3 (`zerogpu` / `--from-glb`):** Generates a concept image on HF ZeroGPU (`black-forest-labs/FLUX.1-schnell`), generates a 3D GLB on `microsoft/TRELLIS.2` ZeroGPU (using `HF_TOKEN` from `~/.hermes/.env`, 0 local VRAM), and runs Blender 5.0.1 to rescale to real-world meters, estimate `FET_033_STANDARD` mass/CoM/inertia, decompose into compound convex hulls, and author `GSP.001` grasp lines.
-- [x] `Scribblenauts` autoload (`godot/scripts/scribblenauts.gd`): supports instant cache spawn, synchronous spawn for headless tests, and non-blocking `Thread` execution with a grabbable glowing Holo-Placeholder that solidifies into the compiled asset via runtime `GLTFDocument` hot-loading.
-- [x] Three-door integration: GDScript API (`Scribblenauts.spawn_prompt(...)`), Desktop interactive prompt bar (**`P`** or **`/`**), and XR `HUDMenu` -> `Tools` -> `Scribblenauts AI` submenu.
+- [x] `OracleConjure` autoload (`godot/scripts/conjure.gd`): supports instant cache spawn, synchronous spawn for headless tests, and non-blocking `Thread` execution with a grabbable glowing Holo-Placeholder that solidifies into the compiled asset via runtime `GLTFDocument` hot-loading.
+- [x] Three-door integration: GDScript API (`OracleConjure.spawn_prompt(...)`), Desktop interactive prompt bar (**`P`** or **`/`**), and XR `HUDMenu` -> `Tools` -> `Oracle Conjure AI` submenu.
 
 ---
 

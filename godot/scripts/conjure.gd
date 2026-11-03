@@ -1,5 +1,5 @@
 extends Node
-## Scribblenauts — Phase D natural-language 3-tier object spawner & ZeroGPU bridge.
+## OracleConjure — Phase D natural-language 3-tier object spawner & ZeroGPU bridge.
 ##
 ## Resolves any text prompt into a physical Jolt prop via three tiers:
 ##   Tier 1: Instant SimReady Central catalog match (cached or live OpenUSD ingest)
@@ -153,15 +153,15 @@ func spawn_prompt(
 
 
 func _run_worker(prompt: String, mode: String) -> Dictionary:
-	var script_abs := ProjectSettings.globalize_path("res://../tools/scribblenauts_spawn.py")
+	var script_abs := ProjectSettings.globalize_path("res://../tools/conjure_spawn.py")
 	var out: Array = []
 	var args := PackedStringArray(["--prompt", prompt, "--mode", mode])
 	var code := OS.execute("python3", PackedStringArray([script_abs]) + args, out, true)
 	var combined := "\n".join(out)
 	for line in combined.split("\n"):
-		var idx := line.find("SCRIBBLENAUTS_RESULT ")
+		var idx := line.find("CONJURE_RESULT ")
 		if idx >= 0:
-			var json_s := line.substr(idx + "SCRIBBLENAUTS_RESULT ".length()).strip_edges()
+			var json_s := line.substr(idx + "CONJURE_RESULT ".length()).strip_edges()
 			var parsed = JSON.parse_string(json_s)
 			if parsed is Dictionary:
 				return parsed

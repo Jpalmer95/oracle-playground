@@ -28,7 +28,7 @@ func _ready() -> void:
 	await _test_phase_a_physics_balance_and_two_hands()
 	await _test_phase_b_simready_catalog_and_articulations()
 	await _test_phase_c_brep_rube_goldberg_chain()
-	await _test_phase_d_scribblenauts_and_zerogpu_compiler()
+	await _test_phase_d_conjure_and_zerogpu_compiler()
 	if _failures == 0:
 		print("Oracle tests: PASS")
 		get_tree().quit(0)
@@ -632,29 +632,29 @@ func _test_phase_c_brep_rube_goldberg_chain() -> void:
 	await get_tree().process_frame
 
 
-func _test_phase_d_scribblenauts_and_zerogpu_compiler() -> void:
-	print("[Phase D: Scribblenauts 3-tier natural-language spawner + ZeroGPU/GLB physics compiler]")
+func _test_phase_d_conjure_and_zerogpu_compiler() -> void:
+	print("[Phase D: Oracle Conjure 3-tier natural-language spawner + ZeroGPU/GLB physics compiler]")
 	var world := Node3D.new()
 	get_tree().root.add_child(world)
 	OracleBuilder.set_parent(world)
 
-	_ok(Scribblenauts != null, "Scribblenauts autoload present")
+	_ok(OracleConjure != null, "OracleConjure autoload present")
 
 	# 1. Tier 1 natural-language prompt -> SimReady Central asset ("drinking glass")
-	var glass := Scribblenauts.spawn_prompt("drinking glass", Vector3(0, 2, 0), "auto", false, world) as RigidBody3D
-	_ok(glass != null, "Scribblenauts spawned 'drinking glass' (Tier 1 SimReady)")
+	var glass := OracleConjure.spawn_prompt("drinking glass", Vector3(0, 2, 0), "auto", false, world) as RigidBody3D
+	_ok(glass != null, "OracleConjure spawned 'drinking glass' (Tier 1 SimReady)")
 	if glass != null:
 		_ok(absf(glass.mass - 0.303) < 0.05, "drinking glass has USD mass (~0.303kg, got %.3f)" % glass.mass)
 
 	# 2. Tier 2 natural-language prompt -> Aether-Forge usd-brep synthesis ("heavy brass ball")
-	var brass_ball := Scribblenauts.spawn_prompt("heavy brass ball", Vector3(2, 2, 0), "auto", false, world) as RigidBody3D
-	_ok(brass_ball != null, "Scribblenauts spawned 'heavy brass ball' (Tier 2 B-Rep)")
+	var brass_ball := OracleConjure.spawn_prompt("heavy brass ball", Vector3(2, 2, 0), "auto", false, world) as RigidBody3D
+	_ok(brass_ball != null, "OracleConjure spawned 'heavy brass ball' (Tier 2 B-Rep)")
 	if brass_ball != null:
 		_ok(brass_ball.mass > 10.0, "heavy brass ball has high brass density mass (%.2f kg)" % brass_ball.mass)
 
 	# 3. Tier 3 GLB -> SimReady physics compiler ("open hollow hazard crate" from TRELLIS.2 GLB)
-	var crate_sr := Scribblenauts.spawn_prompt("open hollow hazard crate", Vector3(4, 2, 0), "auto", false, world) as RigidBody3D
-	_ok(crate_sr != null, "Scribblenauts spawned 'open hollow hazard crate' (Tier 3 GLB->SimReady)")
+	var crate_sr := OracleConjure.spawn_prompt("open hollow hazard crate", Vector3(4, 2, 0), "auto", false, world) as RigidBody3D
+	_ok(crate_sr != null, "OracleConjure spawned 'open hollow hazard crate' (Tier 3 GLB->SimReady)")
 	if crate_sr != null:
 		var hulls := 0
 		for c in crate_sr.get_children():
@@ -665,7 +665,7 @@ func _test_phase_d_scribblenauts_and_zerogpu_compiler() -> void:
 		_ok(glines.size() >= 1, "compiled GLB includes SimReady GSP.001 grasp_lines")
 
 	# 4. Verify non-blocking Holo-Placeholder for VR async generation
-	var holder := Scribblenauts._make_holo_placeholder("ancient golden chalice", Vector3(0, 3, -2), world)
+	var holder := OracleConjure._make_holo_placeholder("ancient golden chalice", Vector3(0, 3, -2), world)
 	_ok(holder is RigidBody3D and holder.is_in_group("grabbable"), "Holo-Placeholder is a grabbable RigidBody3D")
 
 	OracleBuilder.clear()

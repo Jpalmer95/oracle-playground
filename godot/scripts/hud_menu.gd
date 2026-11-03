@@ -68,23 +68,23 @@ func _build_root() -> void:
 
 
 func _tools_level() -> Array:
-	# Auto-populate: one submenu per palette in tools.json + Scribblenauts AI prompt presets.
+	# Auto-populate: one submenu per palette in tools.json + Oracle Conjure AI prompt presets.
 	var out: Array = []
 	for pid in ToolRegistry.palette_ids():
 		var pid_s: String = pid
 		out.append(_submenu(ToolRegistry.palette_name(pid_s), _palette_level(pid_s)))
-	out.append(_submenu("Scribblenauts AI", _scribblenauts_level()))
+	out.append(_submenu("Oracle Conjure AI", _conjure_level()))
 	return out
 
 
-func _scribblenauts_level() -> Array:
+func _conjure_level() -> Array:
 	return [
-		_action("Prompt: Drinking Glass", "scribblenauts_prompt", "drinking glass"),
-		_action("Prompt: Heavy Brass Ball", "scribblenauts_prompt", "heavy brass ball"),
-		_action("Prompt: Long Ice Chute", "scribblenauts_prompt", "long ice chute"),
-		_action("Prompt: Hollow Hazard Crate", "scribblenauts_prompt", "open hollow hazard crate"),
-		_action("Prompt: Bar Clamp", "scribblenauts_prompt", "bar clamp"),
-		_action("ZeroGPU: Golden Chalice", "scribblenauts_zerogpu", "ancient golden chalice"),
+		_action("Conjure: Drinking Glass", "conjure_prompt", "drinking glass"),
+		_action("Conjure: Heavy Brass Ball", "conjure_prompt", "heavy brass ball"),
+		_action("Conjure: Long Ice Chute", "conjure_prompt", "long ice chute"),
+		_action("Conjure: Hollow Hazard Crate", "conjure_prompt", "open hollow hazard crate"),
+		_action("Conjure: Bar Clamp", "conjure_prompt", "bar clamp"),
+		_action("ZeroGPU: Golden Chalice", "conjure_zerogpu", "ancient golden chalice"),
 	]
 
 
@@ -212,10 +212,10 @@ func _dispatch(action: String, arg: String) -> void:
 	match action:
 		"spawn":
 			OracleBuilder.spawn_tool(arg, _spawn_pos())
-		"scribblenauts_prompt":
-			Scribblenauts.spawn_prompt(arg, _spawn_pos(), "auto", true)
-		"scribblenauts_zerogpu":
-			Scribblenauts.spawn_prompt(arg, _spawn_pos(), "zerogpu", true)
+		"conjure_prompt":
+			OracleConjure.spawn_prompt(arg, _spawn_pos(), "auto", true)
+		"conjure_zerogpu":
+			OracleConjure.spawn_prompt(arg, _spawn_pos(), "zerogpu", true)
 		"undo":
 			OracleBuilder.undo()
 		"clear":

@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Minimal charcoal HUD: mode, speed, gear, fuel, control hints, and
-## interactive Scribblenauts Prompt Bar (toggle with `/` or `P`).
+## interactive Oracle Conjure Prompt Bar (toggle with `/` or `P`).
 
 var _player: OraclePlayer
 var _label: Label
@@ -15,8 +15,8 @@ func _ready() -> void:
 	add_child(_label)
 
 	_prompt_box = LineEdit.new()
-	_prompt_box.name = "ScribblenautsInput"
-	_prompt_box.placeholder_text = "Scribblenauts prompt (e.g. 'drinking glass', 'heavy brass ball', 'ancient golden chalice') -> Enter"
+	_prompt_box.name = "ConjureInput"
+	_prompt_box.placeholder_text = "Oracle Conjure prompt (e.g. 'drinking glass', 'heavy brass ball', 'ancient golden chalice') -> Enter"
 	_prompt_box.position = Vector2(24, 210)
 	_prompt_box.size = Vector2(680, 38)
 	_prompt_box.visible = false
@@ -53,7 +53,7 @@ func _on_prompt_submitted(text: String) -> void:
 	if clean != "" and _player != null:
 		var fwd := -_player.global_transform.basis.z
 		var pos := _player.global_position + Vector3.UP * 1.2 + fwd * 2.0
-		Scribblenauts.spawn_prompt(clean, pos, "auto", true)
+		OracleConjure.spawn_prompt(clean, pos, "auto", true)
 
 
 func _process(_delta: float) -> void:
@@ -64,13 +64,13 @@ func _process(_delta: float) -> void:
 		mode = "headless"
 	var stab := "on" if _player.stabilize_upright else "off"
 	var pmode := "ground" if _player.is_ground_mode() else "flight"
-	var scb := Scribblenauts.last_status if Scribblenauts != null else "Ready"
-	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s   scribblenauts: %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip(G)=power-grab  pinch(B)=balance-grab  stick=move  A=jump --\nT/B-Y = mode/hub   P or / = Scribblenauts prompt bar\n1-5 mats  6 crate  7 hazard  8 hammer  9 bowl  0 marble  - chute  = staff  U undo  Bksp clear" % [
+	var cnj := OracleConjure.last_status if OracleConjure != null else "Ready"
+	_label.text = "ORACLE  %s / %s\nspeed  %.1f m/s\ngear   %d   fuel %.0f\nstabilize %s   conjure: %s\n-- flight: triggers=thrust  grip=turbo  stick=turn  click=gear --\n-- ground: grip(G)=power-grab  pinch(B)=balance-grab  stick=move  A=jump --\nT/B-Y = mode/hub   P or / = Oracle Conjure prompt bar\n1-5 mats  6 crate  7 hazard  8 hammer  9 bowl  0 marble  - chute  = staff  U undo  Bksp clear" % [
 		mode,
 		pmode,
 		_player.linear_velocity.length(),
 		_player.gear,
 		_player.booster_fuel,
 		stab,
-		scb,
+		cnj,
 	]

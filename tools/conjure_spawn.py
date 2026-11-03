@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase D — Scribblenauts 3-Tier Asset Resolver & ZeroGPU 3D Physics Compiler.
+"""Phase D — Oracle Conjure 3-Tier Asset Resolver & ZeroGPU 3D Physics Compiler.
 
 Resolves any natural-language object prompt into a ready-to-spawn Oracle Playground
 SimReady asset (`<slug>.sim.json` + `<slug>.glb` or B-Rep mesh) and registers it in
@@ -17,10 +17,10 @@ SimReady asset (`<slug>.sim.json` + `<slug>.glb` or B-Rep mesh) and registers it
     decompose into compound Jolt convex hulls, and author `GSP.001` grasp lines.
 
 Usage:
-  python3 tools/scribblenauts_spawn.py --prompt "drinking glass"
-  python3 tools/scribblenauts_spawn.py --prompt "heavy brass ball" --mode brep
-  python3 tools/scribblenauts_spawn.py --prompt "ancient golden chalice" --mode zerogpu
-  python3 tools/scribblenauts_spawn.py --prompt "reinforced hazard crate" --from-glb godot/assets/imported/hazard_crate.glb
+  python3 tools/conjure_spawn.py --prompt "drinking glass"
+  python3 tools/conjure_spawn.py --prompt "heavy brass ball" --mode brep
+  python3 tools/conjure_spawn.py --prompt "ancient golden chalice" --mode zerogpu
+  python3 tools/conjure_spawn.py --prompt "reinforced hazard crate" --from-glb godot/assets/imported/hazard_crate.glb
 """
 from __future__ import annotations
 
@@ -240,7 +240,7 @@ def estimate_simready_physics(prompt: str) -> dict:
     }
 
 
-def register_tool_in_config(slug: str, display_name: str, kind: str, palette_id: str = "scribblenauts") -> None:
+def register_tool_in_config(slug: str, display_name: str, kind: str, palette_id: str = "conjure") -> None:
     if not TOOLS_JSON.is_file():
         return
     data = json.loads(TOOLS_JSON.read_text(encoding="utf-8"))
@@ -248,8 +248,8 @@ def register_tool_in_config(slug: str, display_name: str, kind: str, palette_id:
     tools = data.setdefault("tools", {})
 
     if palette_id not in palettes:
-        palettes[palette_id] = {"name": "Scribblenauts", "tools": []}
-    tool_id = slug if slug.startswith(("sr_", "brep_", "scb_")) else f"scb_{slug}"
+        palettes[palette_id] = {"name": "Conjure", "tools": []}
+    tool_id = slug if slug.startswith(("sr_", "brep_", "cnj_")) else f"cnj_{slug}"
     tools[tool_id] = {
         "name": display_name[:26],
         "category": palette_id,
@@ -467,7 +467,7 @@ sim_json = {
 }
 out_file = out_dir / f"{slug}.sim.json"
 out_file.write_text(json.dumps(sim_json, indent=2) + "\n", encoding="utf-8")
-print(f"SCRIBBLENAUTS_BREP_OK slug={slug} mass={mass}kg ms={ms:.1f}")
+print(f"CONJURE_BREP_OK slug={slug} mass={mass}kg ms={ms:.1f}")
 '''
 
 
@@ -515,7 +515,7 @@ def try_tier2_brep(prompt: str, force: bool = False) -> tuple[str, Path] | None:
         check=True,
     )
     for line in res.stdout.splitlines():
-        if "SCRIBBLENAUTS_BREP_OK" in line:
+        if "CONJURE_BREP_OK" in line:
             print(line)
     out_json = out_dir / f"{slug}.sim.json"
     register_tool_in_config(slug, prompt.title(), "brep")
@@ -686,7 +686,7 @@ sim_spec = {
 
 out_json.parent.mkdir(parents=True, exist_ok=True)
 out_json.write_text(json.dumps(sim_spec, indent=2) + "\n", encoding="utf-8")
-print(f"SCRIBBLENAUTS_GLB_OK slug={slug} hulls={len(colliders)} mass={mass:.3f}kg com={com}")
+print(f"CONJURE_GLB_OK slug={slug} hulls={len(colliders)} mass={mass:.3f}kg com={com}")
 '''
 
 
@@ -716,7 +716,7 @@ def compile_glb_to_simready(glb_path: Path, prompt: str, slug: str = "") -> tupl
         print(res.stderr, file=sys.stderr)
         raise RuntimeError(f"Blender GLB->SimReady compilation failed for {slug}")
     for line in res.stdout.splitlines():
-        if "SCRIBBLENAUTS_GLB_OK" in line:
+        if "CONJURE_GLB_OK" in line:
             print(line)
     register_tool_in_config(slug, prompt.title(), "simready")
     return slug, out_json
@@ -808,7 +808,7 @@ def resolve_prompt(prompt: str, mode: str = "auto", from_glb: Path | None = None
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Phase D Scribblenauts 3-Tier Spawner + ZeroGPU Compiler")
+    parser = argparse.ArgumentParser(description="Phase D Oracle Conjure 3-Tier Spawner + ZeroGPU Compiler")
     parser.add_argument("--prompt", required=True, help="Natural language description of the object to spawn")
     parser.add_argument("--mode", choices=["auto", "simready", "brep", "zerogpu"], default="auto")
     parser.add_argument("--from-glb", type=Path, default=None, help="Compile an existing GLB with SimReady physics for --prompt")
@@ -828,7 +828,7 @@ def main() -> int:
         "prompt": args.prompt,
         "sim_json": str(json_path),
     }
-    print("SCRIBBLENAUTS_RESULT " + json.dumps(result))
+    print("CONJURE_RESULT " + json.dumps(result))
     return 0
 
 

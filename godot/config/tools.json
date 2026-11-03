@@ -49,13 +49,13 @@
         "arrow"
       ]
     },
-    "scribblenauts": {
-      "name": "Scribblenauts",
+    "conjure": {
+      "name": "Conjure",
       "tools": [
-        "scb_drinking_glass",
+        "cnj_drinking_glass",
         "brep_heavy_brass_ball",
-        "scb_hazard_crate_simready",
-        "scb_bar_clamp",
+        "cnj_hazard_crate_simready",
+        "cnj_bar_clamp",
         "brep_long_ice_chute"
       ]
     }
@@ -239,9 +239,9 @@
       "category": "action",
       "kind": "clear"
     },
-    "scb_drinking_glass": {
+    "cnj_drinking_glass": {
       "name": "Drinking Glass",
-      "category": "scribblenauts",
+      "category": "conjure",
       "kind": "simready",
       "params": {
         "slug": "drinking_glass"
@@ -249,23 +249,23 @@
     },
     "brep_heavy_brass_ball": {
       "name": "Heavy Brass Ball",
-      "category": "scribblenauts",
+      "category": "conjure",
       "kind": "brep",
       "params": {
         "slug": "brep_heavy_brass_ball"
       }
     },
-    "scb_hazard_crate_simready": {
+    "cnj_hazard_crate_simready": {
       "name": "Open Hollow Hazard Crate",
-      "category": "scribblenauts",
+      "category": "conjure",
       "kind": "simready",
       "params": {
         "slug": "hazard_crate_simready"
       }
     },
-    "scb_bar_clamp": {
+    "cnj_bar_clamp": {
       "name": "Bar Clamp",
-      "category": "scribblenauts",
+      "category": "conjure",
       "kind": "simready",
       "params": {
         "slug": "bar_clamp"
@@ -273,7 +273,7 @@
     },
     "brep_long_ice_chute": {
       "name": "Long Ice Chute",
-      "category": "scribblenauts",
+      "category": "conjure",
       "kind": "brep",
       "params": {
         "slug": "brep_long_ice_chute"
