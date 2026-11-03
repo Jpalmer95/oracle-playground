@@ -40,6 +40,7 @@ cd /home/jonathan/dev/oracle-playground
 | 0 | Spawn B-Rep Steel Marble (`usd-brep` analytic sphere) |
 | - | Spawn B-Rep U-Channel Chute (`usd-brep` boolean trough) |
 | = | Spawn B-Rep Weighted Balance Staff (`+0.38m` shifted CoM) |
+| P or / | Open **Scribblenauts Prompt Bar** (type any object name + Enter) |
 | U / Backspace | Undo / clear spawned |
 | G | Power grab / throw (`grip_pressure = 1.0`, ground mode) |
 | B | Light pinch / balance grab (`grip_pressure = 0.25`, ground mode) |
@@ -120,7 +121,25 @@ Rebuild exact CAD Rube Goldberg solids (`brep_marble_steel`, `brep_chute_straigh
 /home/jonathan/dev/aether-forge/.venv/bin/python tools/brep_rube_goldberg.py --all
 ```
 
-### 3. TRELLIS.2 / Blender GLB Import
+### 3. Scribblenauts 3-Tier Spawner & ZeroGPU 3D Physics Compiler (`tools/scribblenauts_spawn.py`)
+Spawn any object by natural language — in-game via **`P`** / **`/`** (Desktop) or **B/Y -> Tools -> Scribblenauts AI** (XR), or from the CLI:
+
+```bash
+# Tier 1: Pulls & compiles matching OpenUSD package from NVIDIA SimReady Central
+python3 tools/scribblenauts_spawn.py --prompt "drinking glass"
+
+# Tier 2: Synthesizes adjective-scaled B-Rep CAD solid via aether-forge usd-brep
+python3 tools/scribblenauts_spawn.py --prompt "heavy brass ball" --mode brep
+
+# Tier 3a: Upgrades any TRELLIS.2 / Blender GLB with SimReady FET_033_STANDARD physics + compound hulls
+python3 tools/scribblenauts_spawn.py --prompt "open hollow hazard crate" \
+  --from-glb godot/assets/imported/hazard_crate.glb --slug hazard_crate_simready
+
+# Tier 3b: Full ZeroGPU generation (FLUX.1-schnell -> microsoft/TRELLIS.2 -> Blender SimReady Compiler)
+python3 tools/scribblenauts_spawn.py --prompt "ancient golden chalice" --mode zerogpu
+```
+
+### 4. Direct TRELLIS.2 / Blender GLB Import
 Drop a GLB into `godot/assets/imported/` (or run `tools/import_trellis.py`)
 and restart / press I to instantiate imported props as Jolt rigid bodies.
 

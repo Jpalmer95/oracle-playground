@@ -48,6 +48,16 @@
         "bow",
         "arrow"
       ]
+    },
+    "scribblenauts": {
+      "name": "Scribblenauts",
+      "tools": [
+        "scb_drinking_glass",
+        "brep_heavy_brass_ball",
+        "scb_hazard_crate_simready",
+        "scb_bar_clamp",
+        "brep_long_ice_chute"
+      ]
     }
   },
   "tools": {
@@ -55,115 +65,159 @@
       "name": "Ice Cube",
       "category": "material",
       "kind": "material_cube",
-      "params": { "material": "ice", "size": 0.55 }
+      "params": {
+        "material": "ice",
+        "size": 0.55
+      }
     },
     "cube_rubber": {
       "name": "Rubber Cube",
       "category": "material",
       "kind": "material_cube",
-      "params": { "material": "rubber", "size": 0.55 }
+      "params": {
+        "material": "rubber",
+        "size": 0.55
+      }
     },
     "cube_metal": {
       "name": "Metal Cube",
       "category": "material",
       "kind": "material_cube",
-      "params": { "material": "metal", "size": 0.55 }
+      "params": {
+        "material": "metal",
+        "size": 0.55
+      }
     },
     "cube_wood": {
       "name": "Wood Cube",
       "category": "material",
       "kind": "material_cube",
-      "params": { "material": "wood", "size": 0.55 }
+      "params": {
+        "material": "wood",
+        "size": 0.55
+      }
     },
     "cube_glass": {
       "name": "Glass Cube",
       "category": "material",
       "kind": "material_cube",
-      "params": { "material": "glass", "size": 0.55 }
+      "params": {
+        "material": "glass",
+        "size": 0.55
+      }
     },
     "crate_wood": {
       "name": "Wood Crate",
       "category": "prop",
       "kind": "destructible",
-      "params": { "material": "wood", "size": 0.6 }
+      "params": {
+        "material": "wood",
+        "size": 0.6
+      }
     },
     "hazard_crate": {
       "name": "Hazard Crate",
       "category": "import",
       "kind": "glb",
-      "params": { "path": "res://assets/imported/hazard_crate.glb" }
+      "params": {
+        "path": "res://assets/imported/hazard_crate.glb"
+      }
     },
     "sr_hammer": {
       "name": "SimReady Claw Hammer",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "hammer" }
+      "params": {
+        "slug": "hammer"
+      }
     },
     "sr_screwdriver": {
       "name": "SimReady Screwdriver",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "screwdriver" }
+      "params": {
+        "slug": "screwdriver"
+      }
     },
     "sr_mug": {
       "name": "SimReady Ceramic Mug",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "mug" }
+      "params": {
+        "slug": "mug"
+      }
     },
     "sr_bowl": {
       "name": "SimReady Concave Bowl",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "bowl" }
+      "params": {
+        "slug": "bowl"
+      }
     },
     "sr_scissors": {
       "name": "SimReady Hinged Scissors",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "scissors" }
+      "params": {
+        "slug": "scissors"
+      }
     },
     "sr_seesaw": {
       "name": "SimReady Swing & Seesaw",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "playground_swing_seesaw" }
+      "params": {
+        "slug": "playground_swing_seesaw"
+      }
     },
     "sr_spiral_chute": {
       "name": "SimReady Spiral Chute",
       "category": "simready",
       "kind": "simready",
-      "params": { "slug": "spiral_parcel_chute" }
+      "params": {
+        "slug": "spiral_parcel_chute"
+      }
     },
     "brep_marble_steel": {
       "name": "B-Rep Steel Marble",
       "category": "rube_goldberg",
       "kind": "brep",
-      "params": { "slug": "brep_marble_steel" }
+      "params": {
+        "slug": "brep_marble_steel"
+      }
     },
     "brep_chute_straight": {
       "name": "B-Rep U-Channel Chute",
       "category": "rube_goldberg",
       "kind": "brep",
-      "params": { "slug": "brep_chute_straight" }
+      "params": {
+        "slug": "brep_chute_straight"
+      }
     },
     "brep_curved_pipe": {
       "name": "B-Rep Swept Elbow Pipe",
       "category": "rube_goldberg",
       "kind": "brep",
-      "params": { "slug": "brep_curved_pipe" }
+      "params": {
+        "slug": "brep_curved_pipe"
+      }
     },
     "brep_balance_rod": {
       "name": "B-Rep Weighted Balance Staff",
       "category": "rube_goldberg",
       "kind": "brep",
-      "params": { "slug": "brep_balance_rod" }
+      "params": {
+        "slug": "brep_balance_rod"
+      }
     },
     "brep_domino": {
       "name": "B-Rep Domino Tile",
       "category": "rube_goldberg",
       "kind": "brep",
-      "params": { "slug": "brep_domino" }
+      "params": {
+        "slug": "brep_domino"
+      }
     },
     "bow": {
       "name": "Bow",
@@ -184,6 +238,46 @@
       "name": "Clear All",
       "category": "action",
       "kind": "clear"
+    },
+    "scb_drinking_glass": {
+      "name": "Drinking Glass",
+      "category": "scribblenauts",
+      "kind": "simready",
+      "params": {
+        "slug": "drinking_glass"
+      }
+    },
+    "brep_heavy_brass_ball": {
+      "name": "Heavy Brass Ball",
+      "category": "scribblenauts",
+      "kind": "brep",
+      "params": {
+        "slug": "brep_heavy_brass_ball"
+      }
+    },
+    "scb_hazard_crate_simready": {
+      "name": "Open Hollow Hazard Crate",
+      "category": "scribblenauts",
+      "kind": "simready",
+      "params": {
+        "slug": "hazard_crate_simready"
+      }
+    },
+    "scb_bar_clamp": {
+      "name": "Bar Clamp",
+      "category": "scribblenauts",
+      "kind": "simready",
+      "params": {
+        "slug": "bar_clamp"
+      }
+    },
+    "brep_long_ice_chute": {
+      "name": "Long Ice Chute",
+      "category": "scribblenauts",
+      "kind": "brep",
+      "params": {
+        "slug": "brep_long_ice_chute"
+      }
     }
   }
 }

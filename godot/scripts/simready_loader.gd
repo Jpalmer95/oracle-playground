@@ -18,6 +18,10 @@ const BREP_DIR := "res://assets/brep"
 var _spec_cache: Dictionary = {}
 
 
+func reload_catalog() -> void:
+	_spec_cache.clear()
+
+
 func resolve_spec_path(slug_or_path: String) -> String:
 	if slug_or_path.ends_with(".sim.json") and FileAccess.file_exists(slug_or_path):
 		return slug_or_path
@@ -204,17 +208,14 @@ func _build_rigid_body(
 			body.add_child(vm_node)
 			added_visual = true
 
-	# 2. Try loading companion .glb if imported in Godot
+	# 2. Try loading companion .glb (imported resource first, then runtime GLTFDocument hot-load)
 	if not added_visual and spec.has("glb_file"):
 		var glb_path := "%s/%s" % [base_dir, str(spec["glb_file"])]
-		if ResourceLoader.exists(glb_path):
-			var packed: Resource = load(glb_path)
-			if packed is PackedScene:
-				var inst: Node = (packed as PackedScene).instantiate()
-				if inst != null:
-					inst.name = "VisualGLB"
-					body.add_child(inst)
-					added_visual = true
+		var inst: Node = _instantiate_glb(glb_path)
+		if inst != null:
+			inst.name = "VisualGLB"
+			body.add_child(inst)
+			added_visual = true
 
 	# 3. Build all Jolt CollisionShape3D nodes (analytic primitives + compound convex hulls)
 	var col_idx := 0
@@ -298,6 +299,21 @@ func _build_rigid_body(
 				body.add_child(mi)
 
 	return body
+
+
+func _instantiate_glb(glb_path: String) -> Node:
+	if ResourceLoader.exists(glb_path):
+		var packed: Resource = load(glb_path)
+		if packed is PackedScene:
+			return (packed as PackedScene).instantiate()
+	var abs_path := ProjectSettings.globalize_path(glb_path)
+	if FileAccess.file_exists(glb_path) or FileAccess.file_exists(abs_path):
+		var doc := GLTFDocument.new()
+		var state := GLTFState.new()
+		var err := doc.append_from_file(abs_path, state)
+		if err == OK:
+			return doc.generate_scene(state)
+	return null
 
 
 func _build_brep_visual_mesh(vm: Dictionary, mat: Material) -> MeshInstance3D:

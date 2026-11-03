@@ -56,8 +56,16 @@ func _world() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
+		var hud := get_node_or_null("HUD")
+		if hud and hud.has_method("is_prompt_open") and hud.is_prompt_open():
+			if event.physical_keycode == KEY_ESCAPE:
+				hud.toggle_prompt_bar()
+			return
 		var player := get_node_or_null("Player") as OraclePlayer
 		match event.physical_keycode:
+			KEY_P, KEY_SLASH:
+				if hud and hud.has_method("toggle_prompt_bar"):
+					hud.toggle_prompt_bar()
 			KEY_1:
 				OracleBuilder.spawn_tool("cube_ice", _front_of(player))
 			KEY_2:

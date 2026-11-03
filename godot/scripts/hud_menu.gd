@@ -68,12 +68,24 @@ func _build_root() -> void:
 
 
 func _tools_level() -> Array:
-	# Auto-populate: one submenu per palette in tools.json.
+	# Auto-populate: one submenu per palette in tools.json + Scribblenauts AI prompt presets.
 	var out: Array = []
 	for pid in ToolRegistry.palette_ids():
 		var pid_s: String = pid
 		out.append(_submenu(ToolRegistry.palette_name(pid_s), _palette_level(pid_s)))
+	out.append(_submenu("Scribblenauts AI", _scribblenauts_level()))
 	return out
+
+
+func _scribblenauts_level() -> Array:
+	return [
+		_action("Prompt: Drinking Glass", "scribblenauts_prompt", "drinking glass"),
+		_action("Prompt: Heavy Brass Ball", "scribblenauts_prompt", "heavy brass ball"),
+		_action("Prompt: Long Ice Chute", "scribblenauts_prompt", "long ice chute"),
+		_action("Prompt: Hollow Hazard Crate", "scribblenauts_prompt", "open hollow hazard crate"),
+		_action("Prompt: Bar Clamp", "scribblenauts_prompt", "bar clamp"),
+		_action("ZeroGPU: Golden Chalice", "scribblenauts_zerogpu", "ancient golden chalice"),
+	]
 
 
 func _palette_level(pid: String) -> Array:
@@ -200,6 +212,10 @@ func _dispatch(action: String, arg: String) -> void:
 	match action:
 		"spawn":
 			OracleBuilder.spawn_tool(arg, _spawn_pos())
+		"scribblenauts_prompt":
+			Scribblenauts.spawn_prompt(arg, _spawn_pos(), "auto", true)
+		"scribblenauts_zerogpu":
+			Scribblenauts.spawn_prompt(arg, _spawn_pos(), "zerogpu", true)
 		"undo":
 			OracleBuilder.undo()
 		"clear":
